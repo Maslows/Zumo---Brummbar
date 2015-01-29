@@ -1,4 +1,5 @@
 #include "sonar.h"
+#include "osObjects.h"                         // RTOS object definitions
 #include "servo.h"
 #include <cstdio>
 #include "bluetooth.h"
@@ -318,9 +319,17 @@ uint16_t SonarGetDistance(int32_t angle){
 	@param angle  Contains the angle at which the measurement was done
 */
 void SonarDistHandler(uint16_t distance_cm, int32_t angle){
-	/* Your code here */
-	char buffor[12];
-	sprintf(buffor, "%04d,%04hu\n",angle,distance_cm);
-	bt_sendStr(buffor);
+	SonarPacket_t * packet;
+ 
+  packet = osMailAlloc(qid_SonarPacket, 0);       // Allocate memory
+  packet->distance = distance_cm;
+  packet->angle = angle;
+  osMailPut(qid_SonarPacket, packet);                         // Send Mail
 }
+//void SonarDistHandlersss(uint16_t distance_cm, int32_t angle){
+//	/* Your code here */
+//	char buffor[12];
+//	sprintf(buffor, "%04d,%04hu\n",angle,distance_cm);
+//	bt_sendStr(buffor);
+//}
 

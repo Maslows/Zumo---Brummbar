@@ -19,6 +19,10 @@
 
 #include <cmsis_os.h>              // CMSIS RTOS header file
 
+typedef enum {
+  SIG_NEW_DATA_RECEIVED = 0x01
+} ThreadSignal_t;
+
 
 // global 'thread' functions ---------------------------------------------------
 /* 
@@ -33,6 +37,7 @@ extern void comms (void const *argument);          // thread function
 extern int Init_comms(void);                       // thread initialization function
 extern osThreadId tid_comms;                       // thread id
 osThreadDef (comms, osPriorityNormal, 1, 0);       // thread object
+
 
 // global 'semaphores' ----------------------------------------------------------
 /* 
@@ -70,5 +75,13 @@ typedef struct sample_name type_sample_name;             // object data type
 osMailQId qid_sample_name;                               // mail queue id
 osMailQDef (sample_name, 16, type_sample_name);          // mail queue object
 */
+
+typedef struct SonarPacket{
+  uint16_t distance;
+  int32_t angle;
+} SonarPacket_t;
+
+extern osMailQId qid_SonarPacket;
+osMailQDef (SonarPacket, 16, SonarPacket_t); 
 
 #endif  // __osObjects

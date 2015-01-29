@@ -9,6 +9,7 @@
 #include "servo.h"
 #include "motorDriver.h"
 
+osMailQId qid_SonarPacket;
 
 /*
  * main: initialize and start the system

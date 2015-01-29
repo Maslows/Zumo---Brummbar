@@ -57,8 +57,7 @@
 typedef enum { CONTINUOUS, /**< Repeat measurment every ::SONAR_MEAS_INTERVAL_MS */
 							 SINGLE /**< Perform single measurment */
 } SonarMode_t;
-
-
+                   
 /* Global variables */
 extern SonarMode_t SonarMode; 
 

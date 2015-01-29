@@ -1,5 +1,3 @@
-
-//#include <cmsis_os.h>                        // CMSIS RTOS header file
 #include "osObjects.h"                         // RTOS object definitions
 #include "bluetooth.h"
 #include <string.h>
@@ -10,8 +8,45 @@
 #include <stdio.h>
 
 /*----------------------------------------------------------------------------
- *      Thread 1 'Comms': Sample thread
+ *      Thread 1 'Comms'
  *---------------------------------------------------------------------------*/
+ 
+ typedef enum {
+   STOP, 
+   MOVE_FORWARD,
+   MOVE_BACKWARD,
+   TURN_LEFT,
+   TURN_RIGHT,
+   TURN_BY_DEGREE,
+   SPEED_UP,
+   SPEED_DOWN,
+   SPEED_SET,
+   SONAR_MODE,
+   SONAR_SINGLE_POOL,
+   SONAR_SINGLE_INT,
+   SONAR_SET_LOCK_RANGE,
+   COMMAND_PARSE_FAILED
+ }cmdName_t;
+ 
+ typedef struct command{
+	cmdName_t name;
+	int arg1;
+	int arg2;
+	int arg3;
+} cmd_t; 
+ 
+cmd_t parse_command(char * command_string){
+	cmd_t command;
+	char status;
+	
+	status = sscanf(command_string, "@%i#%d#%d#%d$", (int *)&command.name, &command.arg1, &command.arg2, &command.arg3);
+	
+	if (status != 4){
+		command.name = COMMAND_PARSE_FAILED;
+	}
+
+	return command;
+}
 
 osThreadId tid_comms;  // thread id
 
@@ -23,96 +58,144 @@ int Init_comms (void) {
   return(0);
 }
 
-char tab[BUFF_SIZE];
-// KrowaKrowa456 10/3
-// Muka-23 4/3
-int ParseIntNumber(char * string, int begining, int length){
-	int i;
-	int result = 0;
-	int exponent = 1;
-	for ( i = begining + length - 1; i != begining -1; i--){
-		if (string[i] != '-'){
-			string[i] -= 48;
-			string[i] *= exponent;
-			result += string[i];
-			exponent *= 10;
-		}
-		else {
-			result *= -1;
-			break;
-		}
-	}
-	return result;
+char InputString[BUFF_SIZE];
+
+__inline void Command_STOP(void){
+   driveStop();
+}
+__inline void Command_MOVE_FORWARD(void){
+    driveForward(speed);
+}
+__inline void Command_MOVE_BACKWARD(void){
+     driveReverse(speed);
+}
+__inline void Command_TURN_LEFT(void){
+      setTracksDir(REVERSE, FORWARD);
+      setTracksSpeed(DEFAULT_TURNING_SPEED,DEFAULT_TURNING_SPEED);
+}
+__inline void Command_TURN_RIGHT(void){
+       setTracksDir(FORWARD, REVERSE);
+       setTracksSpeed(DEFAULT_TURNING_SPEED,DEFAULT_TURNING_SPEED);
+}
+__inline void Command_TURN_BY_DEGREE(void){
+}
+__inline void Command_SPEED_UP(void){
+  if (speed<=90){
+    speed+=10;
+  };
+}
+__inline void Command_SPEED_DOWN(void){
+  if (speed>=10){
+    speed-=10;
+   };
+}
+__inline void Command_SPEED_SET(int new_speed){
+ if (new_speed >= 0 && new_speed <= 100){
+  speed = new_speed;
+ };
+}
+__inline void Command_SONAR_MODE(int NewMode){
+  switch (NewMode){
+            case 0:
+              ServoChangeMode(MANUAL);
+              ServoMoveByDegree(0);
+              break;
+            case 1:
+               ServoChangeMode(SWEEP);
+               ServoChangeSweepMode(SCAN_AND_GO);
+               break;
+            case 2:
+               ServoChangeMode(SWEEP);
+               ServoChangeSweepMode(SCAN_AND_LOCK);
+               break;
+            default:
+              break;
+            }        
+}
+__inline void Command_SONAR_SINGLE_POOL(int new_deg){
+  char buffor[12];
+  sprintf(buffor, "%04d,%04hu\n",new_deg,SonarGetDistance(new_deg));
+  bt_sendStr(buffor);
+}
+__inline void Command_SONAR_SINGLE_INT(int new_deg){
+  SonarStartMeas(new_deg);
+}
+__inline void Command_SONAR_SET_LOCK_RANGE(int new_range){
+  ServoChangeLockRange(new_range);
+}
+__inline void Command_COMMAND_PARSE_FAILED(void){
+  bt_sendStr("Unknown command /n");
 }
 
 void comms (void const *argument) {
-
+  osEvent evt;
+  cmd_t NewCommand;
+  
   while (1) {
-    bt_getStr( tab );								// Get string from buffer
-		if(strlen( tab )){							// If isn't empty...
-			//bt_sendStr( tab );						// ...send it back.
-			if ( strcmp(tab, "w") == 0 ) {
-				driveForward(speed);
-			}
-			else if ( strcmp(tab, "s") == 0) {
-				driveReverse(speed);
-			}
-			else if ( strcmp(tab, " ") == 0) {
-				driveStop();
-			} 
-			else if ( strcmp(tab, "a") == 0) {
-        setTracksDir(REVERSE, FORWARD);
-        setTracksSpeed(DEFAULT_TURNING_SPEED,DEFAULT_TURNING_SPEED);
-			}
-			else if ( strcmp(tab, "d") == 0) {
-				setTracksDir(FORWARD, REVERSE);
-        setTracksSpeed(DEFAULT_TURNING_SPEED,DEFAULT_TURNING_SPEED);
-			}
-			else if ( strcmp(tab, "ServoScanAndLock") == 0) {
-				ServoChangeMode(SWEEP);
-				ServoChangeSweepMode(SCAN_AND_LOCK);
-			}
-			else if ( strcmp(tab, "ServoScanAndGo") == 0) {
-				ServoChangeMode(SWEEP);
-				ServoChangeSweepMode(SCAN_AND_GO);
-			}
-			else if ( strcmp(tab, "ServoCenter") == 0) {
-				ServoChangeMode(MANUAL);
-				ServoMoveByDegree(0);
-			}
-			else if ( strncmp(tab, "SonarStartMeas",14) == 0) {
-				int new_deg = ParseIntNumber(tab,14,3);
-				SonarStartMeas(new_deg);
-			}
-			else if ( strncmp(tab, "SonarGetDistance",16) == 0) {
-				char buffor[12];
-				int new_deg = ParseIntNumber(tab,16,3);
-				sprintf(buffor, "%04d,%04hu\n",new_deg,SonarGetDistance(new_deg));
-				bt_sendStr(buffor);
-			}
-			else if ( strcmp(tab, "e") == 0) {
-				if (speed<=90){
-					speed+=10;
-				}
-			}
-			else if ( strcmp(tab, "q") == 0) {
-				if (speed>=10){
-					speed-=10;
-				}
-			}
-			else if (strncmp(tab, "speed",5) == 0){
-				int new_speed = ParseIntNumber(tab,5,3);
-				if (new_speed >= 0 && new_speed <= 100){
-					speed = new_speed;
-				}
-			}
-			else if ( strncmp(tab, "SonarLockRange",14) == 0) {
-				int new_range = ParseIntNumber(tab,14,3);
-				ServoChangeLockRange(new_range);
-			}
-		}
-    osThreadYield();                                            // suspend thread
+    bt_getStr( InputString );								// Get string from buffer
+		if(strlen( InputString )){							// If isn't empty...
+			//bt_sendStr( InputString );						// ...send it back.
+      NewCommand = parse_command(InputString);
+      switch (NewCommand.name){
+        case STOP:
+          Command_STOP();
+          break;
+        
+        case MOVE_FORWARD:
+          Command_MOVE_FORWARD();
+          break;
+        
+        case MOVE_BACKWARD:
+          Command_MOVE_BACKWARD();
+          break;
+        
+        case TURN_LEFT:
+          Command_TURN_LEFT();
+          break;
+        
+        case TURN_RIGHT:
+          Command_TURN_RIGHT();
+          break;
+        
+        case TURN_BY_DEGREE:
+          Command_TURN_BY_DEGREE();
+          break;
+        
+        case SPEED_UP:
+          Command_SPEED_UP();
+          break;
+        
+        case SPEED_DOWN:
+          Command_SPEED_DOWN();
+          break;
+        
+        case SPEED_SET:
+           Command_SPEED_SET(NewCommand.arg1);
+           break;
+        
+        case SONAR_MODE:
+           Command_SONAR_MODE(NewCommand.arg1);
+           break; 
+        
+        case SONAR_SINGLE_POOL:
+           Command_SONAR_SINGLE_POOL(NewCommand.arg1);
+           break;
+        
+        case SONAR_SINGLE_INT:
+           Command_SONAR_SINGLE_INT(NewCommand.arg1);
+           break;
+        
+        case SONAR_SET_LOCK_RANGE:
+           Command_SONAR_SET_LOCK_RANGE(NewCommand.arg1);    
+           break;
+        
+        case COMMAND_PARSE_FAILED:
+        default:
+           Command_COMMAND_PARSE_FAILED();
+      }
+    } else {
+        evt = 
+    }
   }
 }
-
 

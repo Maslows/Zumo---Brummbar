@@ -3,6 +3,7 @@
  * @brief		Bluetooth library for KL46Z and HC-06 module
  */
 #include "MKL46Z4.h"
+#include "osObjects.h"                      // RTOS object definitions
 #include "bluetooth.h"
 #include <string.h>
 
@@ -28,15 +29,16 @@ void UART1_IRQHandler(void){
 void UART2_IRQHandler(void){
 #endif	
 	
-	__disable_irq();
+	
 	
 	if(UART(UART_MODULE)->S1 & UART_S1_RDRF_MASK){
 		
 		c = UART(UART_MODULE)->D;
 
 #if OVERWRITE==1	
-		if( c == '\0' || c == '\r' || c == '$'){
+		if( c == '\0' || c == '\r' ){
 			string_count++;
+      osSignalSet(tid_comms,SIG_NEW_DATA_RECEIVED);
 			c = '\0';
 		}
 #endif
@@ -44,10 +46,11 @@ void UART2_IRQHandler(void){
 		if( !buf_full(&RxBuf) ){
 			
 #if OVERWRITE==0			
-			if( c == '\0' || c == '\r' || c == '$'){
-				string_count++;
-				c = '\0';
-			}
+		if( c == '\0' || c == '\r' ){
+			string_count++;
+      osSignalSet(tid_comms,SIG_NEW_DATA_RECEIVED);
+			c = '\0';
+		}
 #endif
 			
 			to_UART_buffer( c, &RxBuf );		
@@ -80,7 +83,6 @@ void UART2_IRQHandler(void){
 	}
 	
 	NVIC_ClearPendingIRQ(UART0_IRQn);
-	__enable_irq();
 }
 
 
