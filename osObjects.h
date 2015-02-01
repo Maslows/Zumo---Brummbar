@@ -20,7 +20,8 @@
 #include <cmsis_os.h>              // CMSIS RTOS header file
 
 typedef enum {
-  SIG_NEW_DATA_RECEIVED = 0x01
+  SIG_SONAR_MAIL_SENT = 0x01,
+  SIG_UART_DATA_RECIEVED = 0x02
 } ThreadSignal_t;
 
 
@@ -76,12 +77,12 @@ osMailQId qid_sample_name;                               // mail queue id
 osMailQDef (sample_name, 16, type_sample_name);          // mail queue object
 */
 
-typedef struct SonarPacket{
+typedef struct SonarSample{
   uint16_t distance;
   int32_t angle;
-} SonarPacket_t;
+} SonarSample_t;
 
-extern osMailQId qid_SonarPacket;
-osMailQDef (SonarPacket, 16, SonarPacket_t); 
+extern osMailQId qid_SonarSample;
+osMailQDef (SonarSample, 16, SonarSample_t); 
 
 #endif  // __osObjects

@@ -9,23 +9,26 @@
 #include "servo.h"
 #include "motorDriver.h"
 
-osMailQId qid_SonarPacket;
+osMailQId qid_SonarSample;
 
 /*
  * main: initialize and start the system
  */
 int main (void) {
   osKernelInitialize ();                    // initialize CMSIS-RTOS
+  
+  /* Initialize Mail queues */
+  qid_SonarSample = osMailCreate(osMailQ(SonarSample),NULL);
+  
+  /* Initialize Peripherials */
   bt_init(9600u);
   Sonar_init(CONTINUOUS);
   Servo_init(MANUAL, SCAN_AND_LOCK);
   motorDriverInit();
-  // initialize peripherals here
-	
-  // create 'thread' functions that start executing,
-  // example: tid_name = osThreadCreate (osThread(name), NULL);
+ 
   
-  //tid_comms = osThreadCreate (osThread(comms), NULL);
+  
+  
   Init_comms();
   
 	osKernelStart ();                         // start thread execution 

@@ -58,7 +58,7 @@ uint8_t AvgPointer = 0;
 	If this variable is set to 0, Sonar will trigger ::SonarDistHandler with obtained result.
 	@warning Do not read or write this variable by hand!
 */
-int16_t SingleResult = 0;
+volatile int16_t SingleResult = 0;
 
 /**
  @brief Initialize Sonar and required peripherials
@@ -112,7 +112,7 @@ void Sonar_init(SonarMode_t InitialWorkMode){
 /**
  @brief Helper function which returns result to the user in case of single measurement.
 */
-void ReturnSingleMeas(uint16_t result){
+void ReturnSingleMeas(int16_t result){
 	DisableSonar();
 	/* Check how to return data */
 	switch(SingleResult){
@@ -128,14 +128,14 @@ void ReturnSingleMeas(uint16_t result){
 	@brief Helper function which calculates average of all samples in ::AvgBuffer.
 */
 uint16_t CalculateResult(){
-	uint16_t result = 0;
+	int16_t result = 0;
 	uint8_t  i = 0;
 
 	for (i = 0; i < SONAR_AVG_NUMBER; i++){
 		result += AvgBuffer[i];
 	}
 
-	result /= (double)SONAR_AVG_NUMBER;
+	result /= (float)SONAR_AVG_NUMBER;
 
 	if (result > SONAR_MAX_RANGE_CM){
 		result = 0;
@@ -156,9 +156,9 @@ void TPM1_IRQHandler(void) {
 	/* Rising edge */
 	if (FPTE->PDIR & ECHO_MASK){
 		  TPM1->CONTROLS[1].CnV = 0;					/* Disable trigger */
-		  TPM1->CNT = 0; 								/* Reset counter */
+		  TPM1->CNT = 0; 								      /* Reset counter */
 			TPM1->SC |= TPM_SC_TOF_MASK;				/* Clear TPM1 Overflow flag */
-		    TPM1->SC |= TPM_SC_TOF_MASK;				/* Double buffered  */
+		  TPM1->SC |= TPM_SC_TOF_MASK;			/* Double buffered  */
 
 	/* Falling edge */
 	} else {
@@ -301,7 +301,7 @@ uint16_t SonarGetDistance(int32_t angle){
 	SonarChangeMode(SINGLE);				  /* Change sonar mode and enable if not set to single already*/
 	EnableSonar();
 
-	while(SingleResult == -1){};		/* busy-wait for result */
+	while(SingleResult < 0 );		/* busy-wait for result */
 	return SingleResult;
 };
 
@@ -319,17 +319,13 @@ uint16_t SonarGetDistance(int32_t angle){
 	@param angle  Contains the angle at which the measurement was done
 */
 void SonarDistHandler(uint16_t distance_cm, int32_t angle){
-	SonarPacket_t * packet;
+	SonarSample_t * packet;
  
-  packet = osMailAlloc(qid_SonarPacket, 0);       // Allocate memory
+  packet = osMailAlloc(qid_SonarSample, 0);       // Allocate memory
   packet->distance = distance_cm;
   packet->angle = angle;
-  osMailPut(qid_SonarPacket, packet);                         // Send Mail
+  osMailPut(qid_SonarSample, packet);             // Send Mail
+  osSignalSet(tid_comms, SIG_SONAR_MAIL_SENT);    // Send signal to Comms
 }
-//void SonarDistHandlersss(uint16_t distance_cm, int32_t angle){
-//	/* Your code here */
-//	char buffor[12];
-//	sprintf(buffor, "%04d,%04hu\n",angle,distance_cm);
-//	bt_sendStr(buffor);
-//}
+
 

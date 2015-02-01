@@ -38,7 +38,7 @@ void UART2_IRQHandler(void){
 #if OVERWRITE==1	
 		if( c == '\0' || c == '\r' ){
 			string_count++;
-      osSignalSet(tid_comms,SIG_NEW_DATA_RECEIVED);
+      osSignalSet(tid_comms,SIG_UART_DATA_RECIEVED);
 			c = '\0';
 		}
 #endif
@@ -231,21 +231,25 @@ char bt_getChar( void ){
 }
 
 
-void bt_getStr( char * destination ){
+int bt_getStr( char * destination ){
 	
 	// If in Rx buffer isn't any string return empty string.
-	if( string_count == 0 ) *destination = '\0';
-	
-	else{
+	if( string_count == 0 ) {
+    *destination = '\0';
+    return 0;
+    
+  } else {
 		uint16_t i = 0;
-		
-		// ...if is copy one to user array.
+
 		do{
 			c = bt_getChar();
 			*((destination)+i) = c;
 			i++;
 		}
 		while( c != '\0');
+    
+    return i>1 ? 1 : 0;
+    
 	}
 }
 

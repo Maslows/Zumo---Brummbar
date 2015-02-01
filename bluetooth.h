@@ -129,7 +129,7 @@ char bt_getChar( void );
 	@warning 	Be sure that destination table is big enough to contain incoming string.
 						Incoming string has to be ended with a (NULL) or (CR) character.
 */
-void bt_getStr( char * destination );
+int bt_getStr( char * destination );
 
 
 // Other functions

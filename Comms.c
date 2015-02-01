@@ -77,7 +77,13 @@ __inline void Command_TURN_RIGHT(void){
        setTracksDir(FORWARD, REVERSE);
        setTracksSpeed(DEFAULT_TURNING_SPEED,DEFAULT_TURNING_SPEED);
 }
-__inline void Command_TURN_BY_DEGREE(void){
+__inline void Command_TURN_BY_DEGREE(int angle){
+  driveStop();
+  if (angle>0){
+    turnRightE(angle);
+  } else if (angle<0){
+    turnLeftE(-angle);
+  }
 }
 __inline void Command_SPEED_UP(void){
   if (speed<=90){
@@ -101,12 +107,12 @@ __inline void Command_SONAR_MODE(int NewMode){
               ServoMoveByDegree(0);
               break;
             case 1:
-               ServoChangeMode(SWEEP);
                ServoChangeSweepMode(SCAN_AND_GO);
+               ServoChangeMode(SWEEP); 
                break;
             case 2:
-               ServoChangeMode(SWEEP);
                ServoChangeSweepMode(SCAN_AND_LOCK);
+               ServoChangeMode(SWEEP);
                break;
             default:
               break;
@@ -124,78 +130,100 @@ __inline void Command_SONAR_SET_LOCK_RANGE(int new_range){
   ServoChangeLockRange(new_range);
 }
 __inline void Command_COMMAND_PARSE_FAILED(void){
-  bt_sendStr("Unknown command /n");
+  bt_sendStr("Unknown command \n");
 }
 
+__inline void ExecuteCommand(cmd_t * command){
+  switch (command->name){
+    case STOP:
+      Command_STOP();
+      break;
+    
+    case MOVE_FORWARD:
+      Command_MOVE_FORWARD();
+      break;
+    
+    case MOVE_BACKWARD:
+      Command_MOVE_BACKWARD();
+      break;
+    
+    case TURN_LEFT:
+      Command_TURN_LEFT();
+      break;
+    
+    case TURN_RIGHT:
+      Command_TURN_RIGHT();
+      break;
+    
+    case TURN_BY_DEGREE:
+      Command_TURN_BY_DEGREE(command->arg1);
+      break;
+    
+    case SPEED_UP:
+      Command_SPEED_UP();
+      break;
+    
+    case SPEED_DOWN:
+      Command_SPEED_DOWN();
+      break;
+    
+    case SPEED_SET:
+       Command_SPEED_SET(command->arg1);
+       break;
+    
+    case SONAR_MODE:
+       Command_SONAR_MODE(command->arg1);
+       break; 
+    
+    case SONAR_SINGLE_POOL:
+       Command_SONAR_SINGLE_POOL(command->arg1);
+       break;
+    
+    case SONAR_SINGLE_INT:
+       Command_SONAR_SINGLE_INT(command->arg1);
+       break;
+    
+    case SONAR_SET_LOCK_RANGE:
+       Command_SONAR_SET_LOCK_RANGE(command->arg1);    
+       break;
+    
+    case COMMAND_PARSE_FAILED:
+    default:
+       Command_COMMAND_PARSE_FAILED();
+  }
+}
 void comms (void const *argument) {
-  osEvent evt;
+  osEvent SigEvt,MailEvt;
   cmd_t NewCommand;
+  SonarSample_t * SonarSample;
   
   while (1) {
-    bt_getStr( InputString );								// Get string from buffer
-		if(strlen( InputString )){							// If isn't empty...
-			//bt_sendStr( InputString );						// ...send it back.
-      NewCommand = parse_command(InputString);
-      switch (NewCommand.name){
-        case STOP:
-          Command_STOP();
-          break;
-        
-        case MOVE_FORWARD:
-          Command_MOVE_FORWARD();
-          break;
-        
-        case MOVE_BACKWARD:
-          Command_MOVE_BACKWARD();
-          break;
-        
-        case TURN_LEFT:
-          Command_TURN_LEFT();
-          break;
-        
-        case TURN_RIGHT:
-          Command_TURN_RIGHT();
-          break;
-        
-        case TURN_BY_DEGREE:
-          Command_TURN_BY_DEGREE();
-          break;
-        
-        case SPEED_UP:
-          Command_SPEED_UP();
-          break;
-        
-        case SPEED_DOWN:
-          Command_SPEED_DOWN();
-          break;
-        
-        case SPEED_SET:
-           Command_SPEED_SET(NewCommand.arg1);
-           break;
-        
-        case SONAR_MODE:
-           Command_SONAR_MODE(NewCommand.arg1);
-           break; 
-        
-        case SONAR_SINGLE_POOL:
-           Command_SONAR_SINGLE_POOL(NewCommand.arg1);
-           break;
-        
-        case SONAR_SINGLE_INT:
-           Command_SONAR_SINGLE_INT(NewCommand.arg1);
-           break;
-        
-        case SONAR_SET_LOCK_RANGE:
-           Command_SONAR_SET_LOCK_RANGE(NewCommand.arg1);    
-           break;
-        
-        case COMMAND_PARSE_FAILED:
-        default:
-           Command_COMMAND_PARSE_FAILED();
+    SigEvt = osSignalWait(0,osWaitForever);
+    
+    if (SigEvt.status == osEventSignal){
+      
+      if(SigEvt.value.signals | SIG_SONAR_MAIL_SENT){
+        while(1){
+          MailEvt = osMailGet(qid_SonarSample,0);
+          if (MailEvt.status == osEventMail){
+            char buffor[12];
+            SonarSample = MailEvt.value.p;
+            sprintf(buffor, "%04d,%04hu\n",SonarSample->angle,SonarSample->distance);
+            bt_sendStr(buffor);
+            osMailFree(qid_SonarSample, SonarSample);
+          } else {
+            break;
+          }
+        }    
       }
-    } else {
-        evt = 
+      
+      if(SigEvt.value.signals | SIG_UART_DATA_RECIEVED){
+        while(bt_getStr( InputString )){						
+          //bt_sendStr( InputString );						// ...send it back.
+          NewCommand = parse_command(InputString);
+          ExecuteCommand(&NewCommand);
+        }
+      } 
     }
   }
 }
-
