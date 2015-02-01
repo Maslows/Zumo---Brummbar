@@ -76,12 +76,7 @@ __inline void Command_TURN_RIGHT(void){
      turnRight();  
 }
 __inline void Command_TURN_BY_DEGREE(int angle){
-  driveStop();
-  if (angle>0){
-    //turnRightE(angle);
-  } else if (angle<0){
-    //turnLeftE(-angle);
-  }
+     rotate(angle);
 }
 __inline void Command_SPEED_UP(void){
   if (speed<=90){

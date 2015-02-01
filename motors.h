@@ -3,7 +3,7 @@
 
 #include "MKL46Z4.h"                    // Device header
 
-#define MOTORS_INTERUPT_PRIORITY 3
+#define MOTORS_INTERUPT_PRIORITY 2
 
 /**
   @brief Define distance travelled per encoder event.
@@ -13,9 +13,11 @@
 /**
   @brief Define the perimiter of a wheel.
 */
+#define M_PI 3.141592f
 #define WHEEL_PERIMITER_MM 119 //0.11938052083641214m 
-
-#define DEFAULT_TURNING_SPEED (40)
+#define DISTANCE_BETWEEN_TRACKS_MM 95  //mm
+#define ZUMO_TURN_PERIMITER_MM (M_PI*DISTANCE_BETWEEN_TRACKS_MM)
+#define DEFAULT_TURNING_SPEED (30)
 
 #define RIGHT_PHASE_PIN (9)
 #define RIGHT_PHASE_PIN_MASK (1 << RIGHT_PHASE_PIN)
@@ -46,7 +48,9 @@
 #define RIGHT_A_ENCODER_FPORT (FPTD)
 
 typedef enum {FORWARD,REVERSE} direction_t;
-typedef enum {LEFT,RIGHT,BOTH} track_t;
+typedef enum {LEFT = 0x1,
+              RIGHT = 0x2,
+              BOTH = 0x3} track_t;
 extern uint8_t speed;
 
 
