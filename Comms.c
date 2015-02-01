@@ -1,7 +1,7 @@
 #include "osObjects.h"                         // RTOS object definitions
 #include "bluetooth.h"
 #include <string.h>
-#include "motorDriver.h"
+#include "motors.h"
 #include "sonar.h"
 #include "servo.h"
 #include <stdlib.h>
@@ -70,19 +70,17 @@ __inline void Command_MOVE_BACKWARD(void){
      driveReverse(speed);
 }
 __inline void Command_TURN_LEFT(void){
-      setTracksDir(REVERSE, FORWARD);
-      setTracksSpeed(DEFAULT_TURNING_SPEED,DEFAULT_TURNING_SPEED);
+     turnLeft();
 }
 __inline void Command_TURN_RIGHT(void){
-       setTracksDir(FORWARD, REVERSE);
-       setTracksSpeed(DEFAULT_TURNING_SPEED,DEFAULT_TURNING_SPEED);
+     turnRight();  
 }
 __inline void Command_TURN_BY_DEGREE(int angle){
   driveStop();
   if (angle>0){
-    turnRightE(angle);
+    //turnRightE(angle);
   } else if (angle<0){
-    turnLeftE(-angle);
+    //turnLeftE(-angle);
   }
 }
 __inline void Command_SPEED_UP(void){

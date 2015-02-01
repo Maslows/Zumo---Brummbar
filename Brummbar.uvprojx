@@ -449,54 +449,14 @@
               <FilePath>.\sonar.h</FilePath>
             </File>
             <File>
-              <FileName>motorDriver.c</FileName>
+              <FileName>motors.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\motorDriver.c</FilePath>
+              <FilePath>.\motors.c</FilePath>
             </File>
             <File>
-              <FileName>motorDriver.h</FileName>
+              <FileName>motors.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\motorDriver.h</FilePath>
-            </File>
-            <File>
-              <FileName>acc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\acc.c</FilePath>
-            </File>
-            <File>
-              <FileName>acc.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\acc.h</FilePath>
-            </File>
-            <File>
-              <FileName>compass.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\compass.c</FilePath>
-            </File>
-            <File>
-              <FileName>compass.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\compass.h</FilePath>
-            </File>
-            <File>
-              <FileName>i2c.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\i2c.c</FilePath>
-            </File>
-            <File>
-              <FileName>i2c.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\i2c.h</FilePath>
-            </File>
-            <File>
-              <FileName>mag.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\mag.c</FilePath>
-            </File>
-            <File>
-              <FileName>mag.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\mag.h</FilePath>
+              <FilePath>.\motors.h</FilePath>
             </File>
           </Files>
         </Group>

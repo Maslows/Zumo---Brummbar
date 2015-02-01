@@ -7,7 +7,7 @@
 #include "bluetooth.h"
 #include "sonar.h"
 #include "servo.h"
-#include "motorDriver.h"
+#include "motors.h"
 
 osMailQId qid_SonarSample;
 
@@ -24,10 +24,8 @@ int main (void) {
   bt_init(9600u);
   Sonar_init(CONTINUOUS);
   Servo_init(MANUAL, SCAN_AND_LOCK);
-  motorDriverInit();
- 
-  
-  
+  motors_init();
+   
   
   Init_comms();
   
