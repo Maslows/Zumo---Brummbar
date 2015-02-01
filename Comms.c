@@ -64,10 +64,10 @@ __inline void Command_STOP(void){
    driveStop();
 }
 __inline void Command_MOVE_FORWARD(void){
-    driveForward(speed);
+    drive(speed,FORWARD);
 }
 __inline void Command_MOVE_BACKWARD(void){
-     driveReverse(speed);
+    drive(speed,REVERSE);
 }
 __inline void Command_TURN_LEFT(void){
      turnLeft();

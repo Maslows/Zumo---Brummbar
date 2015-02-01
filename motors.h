@@ -57,7 +57,7 @@ extern uint8_t speed;
 void motors_init(void);
 
 /* Basic controls */
-void driveForward(uint8_t speed);
+void drive(uint8_t speed, direction_t direction);
 void driveReverse(uint8_t speed);
 void driveStop(void);
 void turnLeft(void);

@@ -102,13 +102,9 @@ void PORTC_PORTD_IRQHandler(void){
   
 }
 
-void driveForward(uint8_t speed){
-  SetTrackDirection(BOTH,FORWARD);
-  SetTrackSpeed(BOTH,speed);
-}
-
-void driveReverse(uint8_t speed){
-  SetTrackDirection(BOTH,REVERSE);
+void drive(uint8_t speed, direction_t direction){
+  TurnFlag = 0;
+  SetTrackDirection(BOTH,direction);
   SetTrackSpeed(BOTH,speed);
 }
 
@@ -118,11 +114,13 @@ void driveStop(void){
 }
 
 void turnLeft(void){
+  TurnFlag = 0;
   SetTrackDirection(LEFT,REVERSE);
   SetTrackDirection(RIGHT,FORWARD);
   SetTrackSpeed(BOTH,DEFAULT_TURNING_SPEED);
 }
 void turnRight(void){
+  TurnFlag = 0;
   SetTrackDirection(LEFT,FORWARD);
   SetTrackDirection(RIGHT,REVERSE);
   SetTrackSpeed(BOTH,DEFAULT_TURNING_SPEED);
