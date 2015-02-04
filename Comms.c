@@ -5,16 +5,36 @@
 #include "sonar.h"
 #include "servo.h"
 #include <stdlib.h>
+#include <stdarg.h>
 #include <stdio.h>
+
 
 /*----------------------------------------------------------------------------
  *      Thread 1 'Comms'
  *---------------------------------------------------------------------------*/
+ osThreadId tid_comms;  // thread id
  
- typedef enum {
+void SendMessage(const char * fmt , ...){
+  
+ if(tid_comms){
+  ProcessMessage_t * ProcessMessage;
+  va_list vl;
+   
+  ProcessMessage = osMailAlloc(qid_ProcessMessage, 0);       // Allocate memory
+  if (ProcessMessage != 0){
+    va_start(vl, fmt);
+    vsnprintf( ProcessMessage->msg, 99, fmt, vl);
+    va_end( vl);
+    
+    osMailPut(qid_ProcessMessage, ProcessMessage);    // Send Mail
+    osSignalSet(tid_comms, SIG_PROCMSG_MAIL_SENT);    // Send signal to Comms
+  }
+ }
+}
+ 
+typedef enum {
    STOP, 
-   MOVE_FORWARD,
-   MOVE_BACKWARD,
+   MOVE,
    TURN_LEFT,
    TURN_RIGHT,
    TURN_BY_DEGREE,
@@ -26,9 +46,9 @@
    SONAR_SINGLE_INT,
    SONAR_SET_LOCK_RANGE,
    COMMAND_PARSE_FAILED
- }cmdName_t;
+}cmdName_t;
  
- typedef struct command{
+typedef struct command{
 	cmdName_t name;
 	int arg1;
 	int arg2;
@@ -48,7 +68,7 @@ cmd_t parse_command(char * command_string){
 	return command;
 }
 
-osThreadId tid_comms;  // thread id
+
 
 int Init_comms (void) {
 
@@ -58,86 +78,94 @@ int Init_comms (void) {
   return(0);
 }
 
-char InputString[BUFF_SIZE];
-
-__inline void Command_STOP(void){
+void Command_STOP(void){
    driveStop();
 }
-__inline void Command_MOVE_FORWARD(void){
-    drive(speed,FORWARD);
+void Command_MOVE(direction_t direction, int32_t distance_cm){
+    drive(speed,direction,distance_cm);
 }
-__inline void Command_MOVE_BACKWARD(void){
-    drive(speed,REVERSE);
-}
-__inline void Command_TURN_LEFT(void){
+
+void Command_TURN_LEFT(void){
      turnLeft();
 }
-__inline void Command_TURN_RIGHT(void){
+void Command_TURN_RIGHT(void){
      turnRight();  
 }
-__inline void Command_TURN_BY_DEGREE(int angle){
+void Command_TURN_BY_DEGREE(int angle){
      rotate(angle);
 }
-__inline void Command_SPEED_UP(void){
+void Command_SPEED_UP(void){
   if (speed<=90){
     speed+=10;
   };
 }
-__inline void Command_SPEED_DOWN(void){
+void Command_SPEED_DOWN(void){
   if (speed>=10){
     speed-=10;
    };
 }
-__inline void Command_SPEED_SET(int new_speed){
+void Command_SPEED_SET(int new_speed){
  if (new_speed >= 0 && new_speed <= 100){
   speed = new_speed;
  };
 }
-__inline void Command_SONAR_MODE(int NewMode){
+void Command_SONAR_MODE(int NewMode){
   switch (NewMode){
-            case 0:
-              ServoChangeMode(MANUAL);
-              ServoMoveByDegree(0);
-              break;
-            case 1:
-               ServoChangeSweepMode(SCAN_AND_GO);
-               ServoChangeMode(SWEEP); 
-               break;
-            case 2:
-               ServoChangeSweepMode(SCAN_AND_LOCK);
-               ServoChangeMode(SWEEP);
-               break;
-            default:
-              break;
-            }        
+    case 0:
+      ServoChangeMode(MANUAL);
+      ServoMoveByDegree(0);
+      break;
+    case 1:
+       ServoChangeSweepMode(SCAN_AND_GO);
+       ServoChangeMode(SWEEP); 
+       break;
+    case 2:
+       ServoChangeSweepMode(SCAN_AND_LOCK);
+       ServoChangeMode(SWEEP);
+       break;
+    default:
+      break;
+  }        
 }
-__inline void Command_SONAR_SINGLE_POOL(int new_deg){
+void Command_SONAR_SINGLE_POOL(int new_deg){
   char buffor[12];
   sprintf(buffor, "%04d,%04hu\n",new_deg,SonarGetDistance(new_deg));
   bt_sendStr(buffor);
 }
-__inline void Command_SONAR_SINGLE_INT(int new_deg){
+void Command_SONAR_SINGLE_INT(int new_deg){
   SonarStartMeas(new_deg);
 }
-__inline void Command_SONAR_SET_LOCK_RANGE(int new_range){
+void Command_SONAR_SET_LOCK_RANGE(int new_range){
   ServoChangeLockRange(new_range);
 }
-__inline void Command_COMMAND_PARSE_FAILED(void){
+void Command_COMMAND_PARSE_FAILED(void){
   bt_sendStr("Unknown command \n");
 }
 
-__inline void ExecuteCommand(cmd_t * command){
+void TransmitMessages(void){
+  osEvent MailEvt;
+  ProcessMessage_t * ProcessMessage;
+
+  while(1){
+    MailEvt = osMailGet(qid_ProcessMessage,0);
+    if (MailEvt.status == osEventMail){
+        ProcessMessage = MailEvt.value.p;
+        bt_sendStr(ProcessMessage->msg);
+        osMailFree(qid_ProcessMessage,ProcessMessage);     
+    } else {
+      break;
+    }
+  }  
+}
+
+void ExecuteCommand(cmd_t * command){
   switch (command->name){
     case STOP:
       Command_STOP();
       break;
     
-    case MOVE_FORWARD:
-      Command_MOVE_FORWARD();
-      break;
-    
-    case MOVE_BACKWARD:
-      Command_MOVE_BACKWARD();
+    case MOVE:
+      Command_MOVE((direction_t)command->arg1,command->arg2);
       break;
     
     case TURN_LEFT:
@@ -185,38 +213,38 @@ __inline void ExecuteCommand(cmd_t * command){
        Command_COMMAND_PARSE_FAILED();
   }
 }
-void comms (void const *argument) {
-  osEvent SigEvt,MailEvt;
+
+void ParseAndExecute(void){
+  char InputString[100];
   cmd_t NewCommand;
-  SonarSample_t * SonarSample;
+  while(bt_getStr( InputString )){            
+    //bt_sendStr( InputString );            // ...send it back.
+    NewCommand = parse_command(InputString);
+    ExecuteCommand(&NewCommand);
+  }  
+}
+void comms (void const *argument) {
+  osEvent SigEvt;
+  
   
   while (1) {
     SigEvt = osSignalWait(0,osWaitForever);
-    
-    if (SigEvt.status == osEventSignal){
-      
-      if(SigEvt.value.signals | SIG_SONAR_MAIL_SENT){
-        while(1){
-          MailEvt = osMailGet(qid_SonarSample,0);
-          if (MailEvt.status == osEventMail){
-            char buffor[12];
-            SonarSample = MailEvt.value.p;
-            sprintf(buffor, "%04d,%04hu\n",SonarSample->angle,SonarSample->distance);
-            bt_sendStr(buffor);
-            osMailFree(qid_SonarSample, SonarSample);
-          } else {
-            break;
-          }
-        }    
-      }
-      
-      if(SigEvt.value.signals | SIG_UART_DATA_RECIEVED){
-        while(bt_getStr( InputString )){						
-          //bt_sendStr( InputString );						// ...send it back.
-          NewCommand = parse_command(InputString);
-          ExecuteCommand(&NewCommand);
-        }
-      } 
+         
+    if(SigEvt.value.signals & SIG_PROCMSG_MAIL_SENT){
+      TransmitMessages();
+    }   
+    if(SigEvt.value.signals & SIG_UART_DATA_RECIEVED){
+      ParseAndExecute();
     }
+    if(SigEvt.value.signals & SIG_START_ZUMOAI){
+      Init_ZumoAI();
+    }
+    if(SigEvt.value.signals & SIG_KILL_ZUMOAI){
+      Kill_ZumoAI();
+    }
+    if(SigEvt.value.signals & SIG_START_DEBOUNCE_TIMER){
+      osTimerStart(tid_DebounceTimer,400);
+    }
+    
   }
 }

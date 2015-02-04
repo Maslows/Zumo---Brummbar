@@ -30,7 +30,7 @@
 	@brief Defines number of bytes in Rx and Tx buffers
 	@details	It can be any number, but too big buffers may cause memory problems.
 */
-#define BUFF_SIZE 250		
+#define BUFF_SIZE 300		
 /**
 	@brief When OVERWRITE is set and Rx buffer is full the oldest character will be replaced by receiving data.
 	@warning	It can be ONLY 0 or 1!

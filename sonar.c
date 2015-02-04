@@ -1,8 +1,6 @@
 #include "sonar.h"
 #include "osObjects.h"                         // RTOS object definitions
 #include "servo.h"
-#include <cstdio>
-#include "bluetooth.h"
 
 /**
 	@brief Define number of TPM1 ticks per 1cm
@@ -64,6 +62,9 @@ volatile int16_t SingleResult = 0;
  @brief Initialize Sonar and required peripherials
  @param InitialWorkMode Set initial sonar work mode
 */
+
+volatile uint16_t lastDistance;
+
 void Sonar_init(SonarMode_t InitialWorkMode){
 
 	/* Select clocks */
@@ -219,7 +220,7 @@ void TPM1_IRQHandler(void) {
 			 it will produce A LOT of samples. In SWEEP mode this is not an issude due to the
 			 fact that sonar if offline when servo is changing position, except for LOCKED state in
 		   ::SCAN_AND_LOCK mode */
-		if ( (ServoMode == SWEEP && ServoState != LOCKED) || SonarMode == SINGLE){
+		if ( (ServoMode == SWEEP && tid_zumoAI) || SonarMode == SINGLE){
 			TPM1->CNT = 0;
 		}
 	}
@@ -319,13 +320,13 @@ uint16_t SonarGetDistance(int32_t angle){
 	@param angle  Contains the angle at which the measurement was done
 */
 void SonarDistHandler(uint16_t distance_cm, int32_t angle){
-	SonarSample_t * packet;
+
+  lastDistance = distance_cm;
  
-  packet = osMailAlloc(qid_SonarSample, 0);       // Allocate memory
-  packet->distance = distance_cm;
-  packet->angle = angle;
-  osMailPut(qid_SonarSample, packet);             // Send Mail
-  osSignalSet(tid_comms, SIG_SONAR_MAIL_SENT);    // Send signal to Comms
+  /* send results */
+  if(!tid_zumoAI){
+    SendMessage("Sonar:%04d,%04hu\n",angle,distance_cm);
+  }
 }
 
 

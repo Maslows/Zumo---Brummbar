@@ -33,7 +33,7 @@
  @brief Define sweep step in degrees
  This marco defines a sweep step. Every step servo will rotate by this value.
 */
-#define SERVO_STEP_DEG 30      									/* Sweep step in degrees */
+#define SERVO_STEP_DEG 15      									/* Sweep step in degrees */
 
 /** 
 		@brief Define Servo angular velocity in deg/s
@@ -69,10 +69,15 @@ typedef enum { MOVING, /**<Servo is moving */
 							 LOCKED, /**< Servo is locked in ::SCAN_AND_LOCK sweep mode */
 } ServoState_t;
 
+typedef enum { SWEEP_LEFT,
+               SWEEP_RIGHT
+}ServoSweepDir_t;
+
 /* Global variables */
 extern ServoMode_t ServoMode;
-extern ServoState_t ServoState;
-extern int32_t ServoPosition; 
+extern volatile ServoState_t ServoState;
+extern volatile int32_t ServoPosition;
+extern volatile ServoSweepDir_t ServoSweepDir;
 
 
 /* Functions */

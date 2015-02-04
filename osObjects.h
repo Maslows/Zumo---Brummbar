@@ -19,11 +19,23 @@
 
 #include <cmsis_os.h>              // CMSIS RTOS header file
 
+// global signals definitions
 typedef enum {
   SIG_SONAR_MAIL_SENT = 0x01,
-  SIG_UART_DATA_RECIEVED = 0x02
-} ThreadSignal_t;
+  SIG_UART_DATA_RECIEVED = 0x02,
+  SIG_MOVE_COMPLETE = 0x4,
+  SIG_ENEMY_LOCK_ON = 0x08,
+  SIG_ENEMY_LOCK_LOST = 0x10,
+  SIG_PROCMSG_MAIL_SENT = 0x20,
+  SIG_START_ZUMOAI = 0x40,
+  SIG_KILL_ZUMOAI = 0x80,
+  SIG_START_DEBOUNCE_TIMER = 0x100,
+  SIG_SWEEP_COMPLETE = 0x200
+} Signal_t;
 
+//typedef enum {
+//} ZummoAISignals_t;
+             
 
 // global 'thread' functions ---------------------------------------------------
 /* 
@@ -34,10 +46,18 @@ osThreadId tid_sample_name;                              // thread id
 osThreadDef (sample_name, osPriorityNormal, 1, 0);       // thread object
 */
 
-extern void comms (void const *argument);          // thread function
-extern int Init_comms(void);                       // thread initialization function
+/* Comms */
+void comms (void const *argument);                 // thread function
+int Init_comms(void);                       // thread initialization function
 extern osThreadId tid_comms;                       // thread id
-osThreadDef (comms, osPriorityNormal, 1, 0);       // thread object
+osThreadDef(comms, osPriorityHigh, 1, 0);       // thread object
+
+/* ZumoAI */
+void zumoAI (void const *argument);                  // thread function
+void Kill_ZumoAI(void);
+int Init_ZumoAI(void);                       // thread initialization function
+extern osThreadId tid_zumoAI;                       // thread id
+osThreadDef(zumoAI, osPriorityNormal, 1, 0);       // thread object
 
 
 // global 'semaphores' ----------------------------------------------------------
@@ -77,12 +97,20 @@ osMailQId qid_sample_name;                               // mail queue id
 osMailQDef (sample_name, 16, type_sample_name);          // mail queue object
 */
 
-typedef struct SonarSample{
-  uint16_t distance;
-  int32_t angle;
-} SonarSample_t;
 
-extern osMailQId qid_SonarSample;
-osMailQDef (SonarSample, 16, SonarSample_t); 
+/* Process Messages */
+typedef struct ProcessMessage{
+  char msg[100];
+} ProcessMessage_t;
 
+extern osMailQId qid_ProcessMessage;
+osMailQDef (ProcessMessage, 15, ProcessMessage_t);
+extern void SendMessage(const char * fmt , ...);
+
+
+/* Timers */
+/*Debounce timer for user button */
+void Debounce_Callback (void const *arg);                    // prototype for timer callback function
+osTimerDef (DebounceTimer, Debounce_Callback);                        // define timer
+extern osTimerId tid_DebounceTimer;
 #endif  // __osObjects

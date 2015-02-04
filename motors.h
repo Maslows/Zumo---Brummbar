@@ -17,7 +17,7 @@
 #define WHEEL_PERIMITER_MM 119 //0.11938052083641214m 
 #define DISTANCE_BETWEEN_TRACKS_MM 95  //mm
 #define ZUMO_TURN_PERIMITER_MM (M_PI*DISTANCE_BETWEEN_TRACKS_MM)
-#define DEFAULT_TURNING_SPEED (30)
+#define DEFAULT_TURNING_SPEED (40)
 
 #define RIGHT_PHASE_PIN (9)
 #define RIGHT_PHASE_PIN_MASK (1 << RIGHT_PHASE_PIN)
@@ -47,7 +47,7 @@
 #define RIGHT_A_ENCODER_PORT PORTD
 #define RIGHT_A_ENCODER_FPORT (FPTD)
 
-typedef enum {FORWARD,REVERSE} direction_t;
+typedef enum {FORWARD = 0x0,REVERSE = 0x1} direction_t;
 typedef enum {LEFT = 0x1,
               RIGHT = 0x2,
               BOTH = 0x3} track_t;
@@ -57,7 +57,7 @@ extern uint8_t speed;
 void motors_init(void);
 
 /* Basic controls */
-void drive(uint8_t speed, direction_t direction);
+void drive(uint8_t speed, direction_t direction, int32_t distance);
 void driveReverse(uint8_t speed);
 void driveStop(void);
 void turnLeft(void);

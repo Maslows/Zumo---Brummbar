@@ -1,12 +1,12 @@
 #include "motors.h"
-
+#include "osObjects.h"                      // RTOS object definitions
 /**
   @brief set MOD for PWM period equal 50us - 20kHz  (clock 48MHz)  */
 #define PWN_PERIOD_VALUE 2400
 #define LEFT_PWM (4)
 #define RIGHT_PWM (2)
 
-volatile uint16_t TurnFlag = 0;
+volatile uint16_t CountFlag = 0;
 volatile uint32_t left_count = 0;
 volatile uint32_t right_count = 0;
 volatile int32_t LeftTrackTurnDist = 0;
@@ -69,14 +69,16 @@ void SetTrackSpeed(track_t track, uint8_t speed) {
   @brief ISR for Left_A encoder
 */
 void PORTA_IRQHandler(void){
-  left_count++;
-  if (TurnFlag & LEFT){
+
+  if (CountFlag & LEFT){
     LeftTrackTurnDist -= TEETH_DISTANCE_MM;
     if ( LeftTrackTurnDist <= 0 ) {
-        TurnFlag &= ~LEFT;
+        CountFlag &= ~LEFT;
         SetTrackSpeed(LEFT, 0);
-    }
-        
+        if (CountFlag == 0){
+          osSignalSet(tid_zumoAI,SIG_MOVE_COMPLETE);
+        }
+    }      
   }
   
   /* Clear interupt flag */
@@ -88,39 +90,57 @@ void PORTA_IRQHandler(void){
   @brief ISR for Right_A encoder
 */
 void PORTC_PORTD_IRQHandler(void){
-   right_count++;
-  if (TurnFlag & RIGHT){
-    RightTrackTurnDist -= TEETH_DISTANCE_MM;
-    if ( LeftTrackTurnDist <= 0 ) {
-        TurnFlag &= ~RIGHT;
-        SetTrackSpeed(RIGHT, 0);
-    }        
+
+  /* Check if encoder caused ISR */
+  if (RIGHT_A_ENCODER_PORT->PCR[RIGHT_A_ENCODER_PIN] & PORT_PCR_ISF_MASK){
+    if (CountFlag & RIGHT){
+      RightTrackTurnDist -= TEETH_DISTANCE_MM;
+      if ( RightTrackTurnDist <= 0 ) {
+          CountFlag &= ~RIGHT;
+          SetTrackSpeed(RIGHT, 0);
+          if (CountFlag == 0){
+            osSignalSet(tid_zumoAI,SIG_MOVE_COMPLETE);
+          }
+      }        
+    }
+    /* Clear interupt flag */
+    RIGHT_A_ENCODER_PORT->PCR[RIGHT_A_ENCODER_PIN] |= PORT_PCR_ISF_MASK;
   }
   
-  /* Clear interupt flag */
-  RIGHT_A_ENCODER_PORT->PCR[RIGHT_A_ENCODER_PIN] |= PORT_PCR_ISF_MASK;
-  
+  /* Check if user button caused interupt */
+  if (PORTD->PCR[7] & PORT_PCR_ISF_MASK){
+    osSignalSet(tid_comms,SIG_START_DEBOUNCE_TIMER);
+    PORTD->PCR[7] |= PORT_PCR_ISF_MASK;
+  }
 }
 
-void drive(uint8_t speed, direction_t direction){
-  TurnFlag = 0;
+void drive(uint8_t speed, direction_t direction, int32_t distance_cm){
+  CountFlag = 0;
   SetTrackDirection(BOTH,direction);
   SetTrackSpeed(BOTH,speed);
+  if (distance_cm > 0){
+    uint32_t distance_mm = distance_cm*10;
+    __disable_irq();
+    LeftTrackTurnDist = distance_mm;
+    RightTrackTurnDist = distance_mm;
+    CountFlag = BOTH;
+    __enable_irq(); 
+  }
 }
 
 void driveStop(void){
-  TurnFlag = 0;
+  CountFlag = 0;
   SetTrackSpeed(BOTH,0);
 }
 
 void turnLeft(void){
-  TurnFlag = 0;
+  CountFlag = 0;
   SetTrackDirection(LEFT,REVERSE);
   SetTrackDirection(RIGHT,FORWARD);
   SetTrackSpeed(BOTH,DEFAULT_TURNING_SPEED);
 }
 void turnRight(void){
-  TurnFlag = 0;
+  CountFlag = 0;
   SetTrackDirection(LEFT,FORWARD);
   SetTrackDirection(RIGHT,REVERSE);
   SetTrackSpeed(BOTH,DEFAULT_TURNING_SPEED);
@@ -142,16 +162,17 @@ void rotate(int angle){
       distance = -distance;
     }
     
-    TurnFlag = BOTH;
+    CountFlag = BOTH;
     LeftTrackTurnDist = distance;
     RightTrackTurnDist = distance;
     SetTrackSpeed(BOTH,DEFAULT_TURNING_SPEED); 
     
     __enable_irq();
-    
-    
+       
   }
 };
+
+
 
 void motors_init(void){
   
@@ -213,6 +234,14 @@ void motors_init(void){
   RIGHT_A_ENCODER_PORT->PCR[RIGHT_A_ENCODER_PIN] |= PORT_PCR_MUX(1)    /* Set MUX to GPIO */
                                                  |  PORT_PCR_IRQC(11)  /* Enable Interupt on either edge */ 
                                                  |  PORT_PCR_ISF_MASK; /* Clear interupt flag */
+                                                 
+  /* Enable button interupt */
+  PORTD->PCR[7] |= PORT_PCR_MUX(1)
+                | PORT_PCR_IRQC(10)
+                | PORT_PCR_ISF_MASK
+                | PORT_PCR_PS_MASK
+                | PORT_PCR_PE_MASK
+                | PORT_PCR_PFE_MASK;
  
  
   NVIC_ClearPendingIRQ(PORTA_IRQn);				/* Clear NVIC any pending interrupts on PORTA */

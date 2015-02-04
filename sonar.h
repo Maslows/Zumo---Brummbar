@@ -32,7 +32,7 @@
 	In #SWEEP mode it is a good idea to slightly bigger number (3-10). Next measurement is done
 	as soon as the previous one is done so the increese in delay is not big.
 */
-#define SONAR_AVG_NUMBER 3
+#define SONAR_AVG_NUMBER 2
 
 /**
 	@brief Define maximum number of measurment retries.
@@ -59,7 +59,8 @@ typedef enum { CONTINUOUS, /**< Repeat measurment every ::SONAR_MEAS_INTERVAL_MS
 } SonarMode_t;
                    
 /* Global variables */
-extern SonarMode_t SonarMode; 
+extern SonarMode_t SonarMode;
+extern volatile uint16_t lastDistance;
 
 /* Functions usable by user */
 void Sonar_init(SonarMode_t InitialWorkMode);

@@ -1,5 +1,6 @@
 #include "servo.h"
 #include "sonar.h"
+#include "osObjects.h"                         // RTOS object definitions
 #include <math.h>
 
 /**
@@ -11,7 +12,7 @@
 	@brief Define servo movement direction in sweep mode 
 	@warning Do NOT modify this! Doing so might result in damaging a servo.
 */
-enum {RIGHT,LEFT} sweep_direction = RIGHT; 
+volatile ServoSweepDir_t ServoSweepDir = SWEEP_RIGHT; 
 
 /** 
 	@brief Define Servo Work mode 
@@ -26,12 +27,12 @@ ServoMode_t ServoMode = MANUAL;
           error due to wrong value of ::SERVO_MOVEMENT_RANGE
           or due to nonlinearity of a servo.
 */
-int32_t ServoPosition = 0;
+volatile int32_t ServoPosition = 0;
 
 /**
 	@brief Variable containing Servo current state 
 */
-ServoState_t ServoState = IDLE;
+volatile ServoState_t ServoState = IDLE;
 
 /**
 	@brief Variable containing current Servo Sweep mode. 
@@ -41,7 +42,7 @@ ServoSweep_t ServoSweepMode = SCAN_AND_GO;
 /**
 	@brief Variable containing current Servo Lock range (cm) in ::SCAN_AND_LOCK mode
 */
-uint16_t ServoLockRange = 30;
+uint16_t ServoLockRange = 40;
 
 
 /**
@@ -91,19 +92,36 @@ void Servo_init(ServoMode_t InitialWorkMode, ServoSweep_t InitialSweepMode){
 }
 
 /**
-	@brief Helper function which moves servo by #SERVO_STEP_DEG in ::sweep_direction
+	@brief Helper function which moves servo by #SERVO_STEP_DEG in ::ServoSweepDir
 */
 void ServoMoveByStep(){
 	int32_t NewPosition = ServoPosition;
-	if (sweep_direction == RIGHT){
+	if (ServoSweepDir == SWEEP_RIGHT){
 		NewPosition += SERVO_STEP_DEG;
-		if (NewPosition >= SERVO_MOVEMENT_RANGE) sweep_direction = LEFT;
+		if (NewPosition >= SERVO_MOVEMENT_RANGE) ServoSweepDir = SWEEP_LEFT;
 	} else {
 		NewPosition -= SERVO_STEP_DEG;
-		if (NewPosition <= -SERVO_MOVEMENT_RANGE) sweep_direction = RIGHT;
+		if (NewPosition <= -SERVO_MOVEMENT_RANGE) ServoSweepDir = SWEEP_RIGHT;
+    osSignalSet(tid_zumoAI,SIG_SWEEP_COMPLETE);
 	}
 	ServoMoveByDegree(NewPosition);	
 }
+
+//void ServoMoveByStep(){
+//	int32_t NewPosition = ServoPosition;
+//	if (ServoSweepDir == SWEEP_RIGHT){
+//    NewPosition += SERVO_STEP_DEG;
+//    if (NewPosition >= SERVO_MOVEMENT_RANGE){
+//      NewPosition = -SERVO_MOVEMENT_RANGE;
+//    }    
+//  } else {
+//    NewPosition -= SERVO_STEP_DEG;
+//    if (NewPosition <= -SERVO_MOVEMENT_RANGE){
+//      NewPosition = SERVO_MOVEMENT_RANGE;
+//    }
+//  }    
+//	ServoMoveByDegree(NewPosition);	
+//}
 
 
 /** 
@@ -118,8 +136,10 @@ void ServoSweepStep(uint16_t distance){
 		case SCAN_AND_LOCK:
 			if (distance == 0 || distance > ServoLockRange){
 				ServoMoveByStep();
+        osSignalSet(tid_zumoAI,SIG_ENEMY_LOCK_LOST);
 			} else {
 				ServoState = LOCKED;
+        osSignalSet(tid_zumoAI,SIG_ENEMY_LOCK_ON);
 				SonarDistHandler(distance, ServoPosition); 													/* Execute user results handler */
 				TPM1->CONTROLS[1].CnV = 15u;																				/* Enable trigger */
 			}
