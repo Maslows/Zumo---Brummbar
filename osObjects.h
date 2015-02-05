@@ -9,17 +9,18 @@
  *
  *--------------------------------------------------------------------------*/
 
-
 #ifndef __osObjects
 #define __osObjects
 
+/* Define RTOS objects with extern attribute */
 #if (!defined (osObjectsPublic))
-#define osObjectsExternal          // define RTOS objects with extern attribute
+#define osObjectsExternal          
 #endif
 
-#include <cmsis_os.h>              // CMSIS RTOS header file
+/* CMSIS RTOS header file */
+#include <cmsis_os.h>              
 
-// global signals definitions
+/* Global signals definitions */
 typedef enum {
   SIG_SONAR_MAIL_SENT = 0x01,
   SIG_UART_DATA_RECIEVED = 0x02,
@@ -33,84 +34,42 @@ typedef enum {
   SIG_SWEEP_COMPLETE = 0x200
 } Signal_t;
 
-//typedef enum {
-//} ZummoAISignals_t;
-             
 
-// global 'thread' functions ---------------------------------------------------
-/* 
-Example:
-extern void sample_name (void const *argument);          // thread function
 
-osThreadId tid_sample_name;                              // thread id
-osThreadDef (sample_name, osPriorityNormal, 1, 0);       // thread object
-*/
-
+/*************************** Threads **********************************/
 /* Comms */
 void comms (void const *argument);                 // thread function
-int Init_comms(void);                       // thread initialization function
+int Init_comms(void);                              // thread initialization function
 extern osThreadId tid_comms;                       // thread id
-osThreadDef(comms, osPriorityHigh, 1, 0);       // thread object
+osThreadDef(comms, osPriorityHigh, 1, 0);          // thread object
 
 /* ZumoAI */
-void zumoAI (void const *argument);                  // thread function
-void Kill_ZumoAI(void);
-int Init_ZumoAI(void);                       // thread initialization function
-extern osThreadId tid_zumoAI;                       // thread id
+void zumoAI (void const *argument);                // thread function
+int Init_ZumoAI(void);                             // thread initialization function
+void Kill_ZumoAI(void);                            // thread termination function
+extern osThreadId tid_zumoAI;                      // thread id
 osThreadDef(zumoAI, osPriorityNormal, 1, 0);       // thread object
 
 
-// global 'semaphores' ----------------------------------------------------------
-/* 
-Example:
-osSemaphoreId sid_sample_name;                           // semaphore id
-osSemaphoreDef (sample_name);                            // semaphore object
+
+/*************************** Process Messages Mail Queue ********************/
+/**
+  @brief Process Meaage typedef
 */
-
-
-// global 'memory pools' --------------------------------------------------------
-/* 
-Example:
-typedef struct sample_name type_sample_name;             // object data type
-
-osPoolId mpid_sample_name;                               // memory pool id
-osPoolDef (sample_name, 16, type_sample_name);           // memory pool object
-*/
-
-
-// global 'message queues' -------------------------------------------------------
-/* 
-Example:
-typedef struct sample_name type_sample_name;             // object data type
-
-osMessageQId mid_sample_name;                            // message queue id
-osMessageQDef (sample_name, 16, type_sample_name);       // message queue object
-*/
-
-
-// global 'mail queues' ----------------------------------------------------------
-/* 
-Example:
-typedef struct sample_name type_sample_name;             // object data type
-
-osMailQId qid_sample_name;                               // mail queue id
-osMailQDef (sample_name, 16, type_sample_name);          // mail queue object
-*/
-
-
-/* Process Messages */
 typedef struct ProcessMessage{
   char msg[100];
 } ProcessMessage_t;
 
-extern osMailQId qid_ProcessMessage;
-osMailQDef (ProcessMessage, 15, ProcessMessage_t);
-extern void SendMessage(const char * fmt , ...);
+extern osMailQId qid_ProcessMessage;                   // mail id
+osMailQDef (ProcessMessage, 15, ProcessMessage_t);     // mail queue definition
+void SendMessage(const char * fmt , ...);              // mail send function
 
+/******************************** Timers *************************************/
 
-/* Timers */
 /*Debounce timer for user button */
-void Debounce_Callback (void const *arg);                    // prototype for timer callback function
-osTimerDef (DebounceTimer, Debounce_Callback);                        // define timer
-extern osTimerId tid_DebounceTimer;
-#endif  // __osObjects
+void Debounce_Callback (void const *arg);           // forward declaration of timer callback function
+osTimerDef (DebounceTimer, Debounce_Callback);      // define timer
+extern osTimerId tid_DebounceTimer;                 // timer id
+
+
+#endif  

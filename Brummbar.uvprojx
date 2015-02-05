@@ -347,7 +347,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>1</Optim>
+            <Optim>4</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>0</OneElfS>
@@ -468,6 +468,11 @@
               <FileType>5</FileType>
               <FilePath>.\motors.h</FilePath>
             </File>
+            <File>
+              <FileName>GPIO_ISR.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\GPIO_ISR.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -482,6 +487,16 @@
               <FileName>bluetooth.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\bluetooth.h</FilePath>
+            </File>
+            <File>
+              <FileName>commands.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\commands.c</FilePath>
+            </File>
+            <File>
+              <FileName>commands.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\commands.h</FilePath>
             </File>
           </Files>
         </Group>

@@ -1,7 +1,10 @@
-#include "servo.h"
-#include "sonar.h"
 #include "osObjects.h"                         // RTOS object definitions
+#include "servo.h"
+
 #include <math.h>
+
+#include "sonar.h"
+
 
 /**
 	@brief Define number of TPM2 ticks per microsecond
@@ -96,13 +99,22 @@ void Servo_init(ServoMode_t InitialWorkMode, ServoSweep_t InitialSweepMode){
 */
 void ServoMoveByStep(){
 	int32_t NewPosition = ServoPosition;
+  static char Sweep_state = 0;
 	if (ServoSweepDir == SWEEP_RIGHT){
 		NewPosition += SERVO_STEP_DEG;
-		if (NewPosition >= SERVO_MOVEMENT_RANGE) ServoSweepDir = SWEEP_LEFT;
+		if (NewPosition >= SERVO_MOVEMENT_RANGE) {
+      ServoSweepDir = SWEEP_LEFT;
+      Sweep_state = 1;
+    }
 	} else {
 		NewPosition -= SERVO_STEP_DEG;
-		if (NewPosition <= -SERVO_MOVEMENT_RANGE) ServoSweepDir = SWEEP_RIGHT;
-    osSignalSet(tid_zumoAI,SIG_SWEEP_COMPLETE);
+		if (NewPosition <= -SERVO_MOVEMENT_RANGE) {
+      ServoSweepDir = SWEEP_RIGHT;
+      if (Sweep_state == 1){
+        osSignalSet(tid_zumoAI,SIG_SWEEP_COMPLETE);
+        Sweep_state = 0;
+      }
+    }
 	}
 	ServoMoveByDegree(NewPosition);	
 }

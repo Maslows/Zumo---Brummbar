@@ -1,19 +1,40 @@
 #include "motors.h"
 #include "osObjects.h"                      // RTOS object definitions
 /**
-  @brief set MOD for PWM period equal 50us - 20kHz  (clock 48MHz)  */
+  @brief set MOD for PWM period equal 50us - 20kHz  (clock 48MHz)  
+*/
 #define PWN_PERIOD_VALUE 2400
 #define LEFT_PWM (4)
 #define RIGHT_PWM (2)
 
-volatile uint16_t CountFlag = 0;
+/**
+  @brief Variable containing encoders flags.
+*/
+volatile uint16_t EncFlags = 0;
+/**
+  @brief Variable containing counter for left encoder.
+*/
 volatile uint32_t left_count = 0;
+/**
+  @brief Variable containing counter for right encoder.
+*/
 volatile uint32_t right_count = 0;
+/**
+  @brief Variable containing turning distance for left track.
+*/
 volatile int32_t LeftTrackTurnDist = 0;
+/**
+  @brief Variable containing turning distance for right track.
+*/
 volatile int32_t RightTrackTurnDist = 0;
-
+/**
+  @brief Variable containing movement speed.
+*/
 uint8_t speed = 50;
 
+/**
+  @brief Setting direction of track.
+*/
 void SetTrackDirection(track_t track, direction_t direction) {
   if (direction == FORWARD){
     switch(track){
@@ -45,6 +66,9 @@ void SetTrackDirection(track_t track, direction_t direction) {
   }
 }
 
+/**
+  @brief Setting track speed.
+*/
 void SetTrackSpeed(track_t track, uint8_t speed) {
   if (speed <= 100){
     uint16_t new_pwm_value = (PWN_PERIOD_VALUE*speed)/100;
@@ -64,58 +88,11 @@ void SetTrackSpeed(track_t track, uint8_t speed) {
   }
 }
 
-
-/**  
-  @brief ISR for Left_A encoder
+/**
+  @brief Setting speed, direction and speed of driving.
 */
-void PORTA_IRQHandler(void){
-
-  if (CountFlag & LEFT){
-    LeftTrackTurnDist -= TEETH_DISTANCE_MM;
-    if ( LeftTrackTurnDist <= 0 ) {
-        CountFlag &= ~LEFT;
-        SetTrackSpeed(LEFT, 0);
-        if (CountFlag == 0){
-          osSignalSet(tid_zumoAI,SIG_MOVE_COMPLETE);
-        }
-    }      
-  }
-  
-  /* Clear interupt flag */
-  LEFT_A_ENCODER_PORT->PCR[LEFT_A_ENCODER_PIN] |= PORT_PCR_ISF_MASK;
-  
-}
-
-/**  
-  @brief ISR for Right_A encoder
-*/
-void PORTC_PORTD_IRQHandler(void){
-
-  /* Check if encoder caused ISR */
-  if (RIGHT_A_ENCODER_PORT->PCR[RIGHT_A_ENCODER_PIN] & PORT_PCR_ISF_MASK){
-    if (CountFlag & RIGHT){
-      RightTrackTurnDist -= TEETH_DISTANCE_MM;
-      if ( RightTrackTurnDist <= 0 ) {
-          CountFlag &= ~RIGHT;
-          SetTrackSpeed(RIGHT, 0);
-          if (CountFlag == 0){
-            osSignalSet(tid_zumoAI,SIG_MOVE_COMPLETE);
-          }
-      }        
-    }
-    /* Clear interupt flag */
-    RIGHT_A_ENCODER_PORT->PCR[RIGHT_A_ENCODER_PIN] |= PORT_PCR_ISF_MASK;
-  }
-  
-  /* Check if user button caused interupt */
-  if (PORTD->PCR[7] & PORT_PCR_ISF_MASK){
-    osSignalSet(tid_comms,SIG_START_DEBOUNCE_TIMER);
-    PORTD->PCR[7] |= PORT_PCR_ISF_MASK;
-  }
-}
-
 void drive(uint8_t speed, direction_t direction, int32_t distance_cm){
-  CountFlag = 0;
+  EncFlags = 0;
   SetTrackDirection(BOTH,direction);
   SetTrackSpeed(BOTH,speed);
   if (distance_cm > 0){
@@ -123,29 +100,40 @@ void drive(uint8_t speed, direction_t direction, int32_t distance_cm){
     __disable_irq();
     LeftTrackTurnDist = distance_mm;
     RightTrackTurnDist = distance_mm;
-    CountFlag = BOTH;
+    EncFlags = BOTH;
     __enable_irq(); 
   }
 }
-
+/**
+  @brief Setting speed to 0..
+*/
 void driveStop(void){
-  CountFlag = 0;
+  EncFlags = 0;
   SetTrackSpeed(BOTH,0);
 }
 
+/**
+  @brief Turning left.
+*/
 void turnLeft(void){
-  CountFlag = 0;
+  EncFlags = 0;
   SetTrackDirection(LEFT,REVERSE);
   SetTrackDirection(RIGHT,FORWARD);
   SetTrackSpeed(BOTH,DEFAULT_TURNING_SPEED);
 }
+/**
+  @brief Turning right.
+*/
 void turnRight(void){
-  CountFlag = 0;
+  EncFlags = 0;
   SetTrackDirection(LEFT,FORWARD);
   SetTrackDirection(RIGHT,REVERSE);
   SetTrackSpeed(BOTH,DEFAULT_TURNING_SPEED);
 }
 
+/**
+  @brief Rotating by giving angle.
+*/
 void rotate(int angle){
   
   if (angle <= -3 || angle >= 3){
@@ -162,7 +150,7 @@ void rotate(int angle){
       distance = -distance;
     }
     
-    CountFlag = BOTH;
+    EncFlags = BOTH;
     LeftTrackTurnDist = distance;
     RightTrackTurnDist = distance;
     SetTrackSpeed(BOTH,DEFAULT_TURNING_SPEED); 
@@ -172,19 +160,20 @@ void rotate(int angle){
   }
 };
 
-
-
+/**
+  @brief Motors initialization.
+*/
 void motors_init(void){
   
-  /********************************** SETUP TPM0 *****************************/
-  /* Select clocks */
+/********************************** SETUP TPM0 *****************************/
+/* Select clocks */
   SIM->SCGC6 |= SIM_SCGC6_TPM0_MASK;
   SIM->SCGC5 |= SIM_SCGC5_PORTA_MASK
              |  SIM_SCGC5_PORTC_MASK
              |  SIM_SCGC5_PORTD_MASK;
-  
-	SIM->SOPT2 |= SIM_SOPT2_TPMSRC(1); 									/*set 'MCGFLLCLK clock or MCGPLLCLK/2' */
-	SIM->SOPT2 |= SIM_SOPT2_PLLFLLSEL_MASK; 						/*set "MCGPLLCLK clock with  fixed divide by two" - 48MHz*/
+
+  SIM->SOPT2 |= SIM_SOPT2_TPMSRC(1); 									/*set 'MCGFLLCLK clock or MCGPLLCLK/2' */
+  SIM->SOPT2 |= SIM_SOPT2_PLLFLLSEL_MASK; 						/*set "MCGPLLCLK clock with  fixed divide by two" - 48MHz*/
   
   /* Set prescaler to 1 */
 	TPM0->SC &= ~TPM_SC_PS_MASK; // the same TPM_SC_PS(0)
@@ -236,12 +225,12 @@ void motors_init(void){
                                                  |  PORT_PCR_ISF_MASK; /* Clear interupt flag */
                                                  
   /* Enable button interupt */
-  PORTD->PCR[7] |= PORT_PCR_MUX(1)
-                | PORT_PCR_IRQC(10)
-                | PORT_PCR_ISF_MASK
-                | PORT_PCR_PS_MASK
-                | PORT_PCR_PE_MASK
-                | PORT_PCR_PFE_MASK;
+  PORTD->PCR[7] |= PORT_PCR_MUX(1)                                      /* Set MUX to GPIO */
+                | PORT_PCR_IRQC(9)                                      /* Enable interrupt flag on rising edge */
+                | PORT_PCR_ISF_MASK                                     /* Clear interupt flag */
+                | PORT_PCR_PS_MASK                                      /* Enable Pull Select for pullup resistor */
+                | PORT_PCR_PE_MASK                                      /* Enable Pull Enable for pull up resistor*/
+                | PORT_PCR_PFE_MASK;                                    /* Enable Passive Input Filter */
  
  
   NVIC_ClearPendingIRQ(PORTA_IRQn);				/* Clear NVIC any pending interrupts on PORTA */

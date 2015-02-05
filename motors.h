@@ -47,21 +47,41 @@
 #define RIGHT_A_ENCODER_PORT PORTD
 #define RIGHT_A_ENCODER_FPORT (FPTD)
 
+/**
+  @brief Define direction.
+*/
 typedef enum {FORWARD = 0x0,REVERSE = 0x1} direction_t;
+/**
+  @brief Define track.
+*/
 typedef enum {LEFT = 0x1,
               RIGHT = 0x2,
               BOTH = 0x3} track_t;
+/**
+  @brief Speed variable.
+*/
 extern uint8_t speed;
 
+/* Encoders global variables */              
+extern volatile uint16_t EncFlags;
+extern volatile uint32_t left_count;
+extern volatile uint32_t right_count;
+extern volatile int32_t LeftTrackTurnDist;
+extern volatile int32_t RightTrackTurnDist;
 
+/* Motors initialization function */
 void motors_init(void);
 
-/* Basic controls */
+/* Basic high level controls */
 void drive(uint8_t speed, direction_t direction, int32_t distance);
 void driveReverse(uint8_t speed);
 void driveStop(void);
 void turnLeft(void);
 void turnRight(void);
+              
+/* Low level controls */
+void SetTrackDirection(track_t track, direction_t direction);
+void SetTrackSpeed(track_t track, uint8_t speed);
 
 /* Functions requiring encoders */
 void rotate(int angle);

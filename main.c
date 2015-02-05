@@ -9,14 +9,14 @@
 #include "servo.h"
 #include "motors.h"
 
-//osMailQId qid_SonarSample;
 osMailQId qid_ProcessMessage;
 
-/*
- * main: initialize and start the system
- */
+/**
+  @brief main: initialize and start the system
+*/
 int main (void) {
-  osKernelInitialize ();                    // initialize CMSIS-RTOS
+  /* Initialize CMSIS-RTOS */
+  osKernelInitialize ();                    
   
   /* Initialize Mail queues */
   qid_ProcessMessage = osMailCreate(osMailQ(ProcessMessage),NULL);
@@ -30,8 +30,9 @@ int main (void) {
   Servo_init(MANUAL, SCAN_AND_LOCK);
   motors_init();
    
-  
+  /* Start coms thread */
   Init_comms();
   
-	osKernelStart ();                         // start thread execution 
+  /* Start thread execuion */
+	osKernelStart ();                          
 }
