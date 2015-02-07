@@ -30,42 +30,25 @@ int Init_comms (void) {
 void SendMessage(const char * fmt , ...){
   
  if(tid_comms){
-  ProcessMessage_t * ProcessMessage;
+  Message_t * Message;
   va_list vl;                                                // stores number and type of arguments
    
-  ProcessMessage = osMailAlloc(qid_ProcessMessage, 0);       // allocate memory for new message
+  Message = osMailAlloc(qid_MessageTX, 0);       // allocate memory for new message
    
-  if (ProcessMessage != 0){
+  if (Message != 0){
     
     __disable_irq();                                         // disable interrupts
     va_start(vl, fmt);                                       // start agument iteration
-    vsnprintf( ProcessMessage->msg, 99, fmt, vl);            // add arguments to buffor based on format string
+    vsnprintf( Message->msg, 100, fmt, vl);            // add arguments to buffor based on format string
     va_end( vl);                                             // finish argument iteration
     __enable_irq();                                          //enable interrupts
-    
-    osMailPut(qid_ProcessMessage, ProcessMessage);           // send Mail
+    Message->msg[100] = '\0';                                // Add null sign just in cass
+    osMailPut(qid_MessageTX, Message);           // send Mail
     osSignalSet(tid_comms, SIG_PROCMSG_MAIL_SENT);           // send signal to Comms
   }
  }
 }
-/**
-  @brief Transmit a massege from mailbox via bluetooth.
-*/
-void TransmitMessages(void){
-  osEvent MailEvt;
-  ProcessMessage_t * ProcessMessage;
 
-  while(1){
-    MailEvt = osMailGet(qid_ProcessMessage,0);               // get mail 
-    if (MailEvt.status == osEventMail){                      // check if there is any mail
-        ProcessMessage = MailEvt.value.p;                    // point to the mail
-        bt_sendStr(ProcessMessage->msg);                     // transmit mail via bluetoth
-        osMailFree(qid_ProcessMessage,ProcessMessage);       // free memory
-    } else {
-      break;
-    }                                                        // no new mail
-  }  
-}
 /**
   @brief Parse input string and execute
 */
@@ -87,10 +70,7 @@ void comms (void const *argument) {
    
   while (1) {
     SigEvt = osSignalWait(0,osWaitForever);             
-         
-    if(SigEvt.value.signals & SIG_PROCMSG_MAIL_SENT){          
-      TransmitMessages();
-    }   
+           
     if(SigEvt.value.signals & SIG_UART_DATA_RECIEVED){
       ParseAndExecute();
     }

@@ -498,6 +498,16 @@
               <FileType>5</FileType>
               <FilePath>.\commands.h</FilePath>
             </File>
+            <File>
+              <FileName>bluetoothDMA.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\bluetoothDMA.c</FilePath>
+            </File>
+            <File>
+              <FileName>bluetoothDMA.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\bluetoothDMA.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

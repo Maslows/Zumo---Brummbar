@@ -56,12 +56,14 @@ osThreadDef(zumoAI, osPriorityNormal, 1, 0);       // thread object
 /**
   @brief Process Meaage typedef
 */
-typedef struct ProcessMessage{
-  char msg[100];
-} ProcessMessage_t;
+typedef struct Message{
+  char msg[101];
+} Message_t;
 
-extern osMailQId qid_ProcessMessage;                   // mail id
-osMailQDef (ProcessMessage, 15, ProcessMessage_t);     // mail queue definition
+extern osMailQId qid_MessageTX;            // mail id
+extern osMailQId qid_MessageRX;            // mail id
+osMailQDef (MessageTX, 10, Message_t);     // mail queue definition
+osMailQDef (MessageRX, 4, Message_t);     // mail queue definition
 void SendMessage(const char * fmt , ...);              // mail send function
 
 /******************************** Timers *************************************/

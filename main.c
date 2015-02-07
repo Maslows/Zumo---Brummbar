@@ -9,7 +9,7 @@
 #include "servo.h"
 #include "motors.h"
 
-osMailQId qid_ProcessMessage;
+
 
 /**
   @brief main: initialize and start the system
@@ -19,8 +19,8 @@ int main (void) {
   osKernelInitialize ();                    
   
   /* Initialize Mail queues */
-  qid_ProcessMessage = osMailCreate(osMailQ(ProcessMessage),NULL);
-  
+  qid_MessageTX = osMailCreate(osMailQ(MessageTX),NULL);
+  qid_MessageRX = osMailCreate(osMailQ(MessageRX),NULL);
   /* Initialize Timers */
   tid_DebounceTimer = osTimerCreate (osTimer(DebounceTimer), osTimerOnce,0);
   
