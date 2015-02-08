@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 #include "commands.h"
-#include "bluetooth.h"
+#include "bluetoothDMA.h"
 
 /******************************** Thread: 'Comms' **************************/
 
@@ -39,25 +39,38 @@ void SendMessage(const char * fmt , ...){
     
     __disable_irq();                                         // disable interrupts
     va_start(vl, fmt);                                       // start agument iteration
-    vsnprintf( Message->msg, 100, fmt, vl);            // add arguments to buffor based on format string
+    vsnprintf( Message->msg, 100, fmt, vl);                  // add arguments to buffor based on format string
     va_end( vl);                                             // finish argument iteration
     __enable_irq();                                          //enable interrupts
     Message->msg[100] = '\0';                                // Add null sign just in cass
-    osMailPut(qid_MessageTX, Message);           // send Mail
-    osSignalSet(tid_comms, SIG_PROCMSG_MAIL_SENT);           // send signal to Comms
+    osMailPut(qid_MessageTX, Message);                       // send Mail
+    
+    /* trigger DMA1 interrupt if not busy */
+    if(!(DMA0->DMA[1].DSR_BCR & DMA_DSR_BCR_BSY_MASK)){
+      NVIC_SetPendingIRQ(DMA1_IRQn);
+    }
+    //osSignalSet(tid_comms, SIG_PROCMSG_MAIL_SENT);           // send signal to Comms
   }
  }
 }
 
 /**
-  @brief Parse input string and execute
+  @brief Get recieved sting from mail, pare and execute;
 */
 void ParseAndExecute(void){
-  char InputString[100];
+  osEvent osEvt;
+  Message_t * Message;
+  
   cmd_t NewCommand;
-  while(bt_getStr( InputString )){            
-    NewCommand = parse_command(InputString);
-    ExecuteCommand(&NewCommand);
+  while(1){
+    osEvt = osMailGet(qid_MessageRX,0);
+    if ( osEvt.status == osEventMail){
+      Message = osEvt.value.p;
+      NewCommand = parse_command(Message->msg);
+      ExecuteCommand(&NewCommand);
+    } else {
+      break;
+    }
   }  
 }
 

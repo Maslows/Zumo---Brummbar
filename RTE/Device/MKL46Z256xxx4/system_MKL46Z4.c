@@ -53,6 +53,7 @@
 #include <stdint.h>
 #include "MKL46Z4.h"
 
+//#define SIMULATOR 1
 #define DISABLE_WDOG    1
 
 #define CLOCK_SETUP     1
@@ -121,10 +122,13 @@ void SystemInit (void) {
   MCG->C5 = (uint8_t)0x00U;
   /* MCG->C6: LOLIE0=0,PLLS=0,CME0=0,VDIV0=0 */
   MCG->C6 = (uint8_t)0x00U;
+  #ifndef SIMULATOR
   while((MCG->S & MCG_S_IREFST_MASK) == 0x00U) { /* Check that the source of the FLL reference clock is the internal reference clock. */
   }
+  
   while((MCG->S & 0x0CU) != 0x00U) {    /* Wait until output of the FLL is selected */
   }
+  #endif
 #elif (CLOCK_SETUP == 1)
   /* SIM->SCGC5: PORTA=1 */
   SIM->SCGC5 |= (uint32_t)0x0200UL;     /* Enable clock gate for ports to enable pin routing */
@@ -149,20 +153,26 @@ void SystemInit (void) {
   MCG->C6 = (uint8_t)0x00U;
   while((MCG->S & MCG_S_IREFST_MASK) != 0x00U) { /* Check that the source of the FLL reference clock is the external reference clock. */
   }
+  #ifndef SIMULATOR
   while((MCG->S & 0x0CU) != 0x08U) {    /* Wait until external reference clock is selected as MCG output */
   }
+  #endif
   /* Switch to PBE Mode */
   /* MCG->C6: LOLIE0=0,PLLS=1,CME0=0,VDIV0=0 */
   MCG->C6 = (uint8_t)0x40U;
+  #ifndef SIMULATOR
   while((MCG->S & 0x0CU) != 0x08U) {    /* Wait until external reference clock is selected as MCG output */
   }
   while((MCG->S & MCG_S_LOCK0_MASK) == 0x00U) { /* Wait until locked */
   }
+  #endif
   /* Switch to PEE Mode */
   /* MCG->C1: CLKS=0,FRDIV=3,IREFS=0,IRCLKEN=1,IREFSTEN=0 */
   MCG->C1 = (uint8_t)0x1AU;
+  #ifndef SIMULATOR
   while((MCG->S & 0x0CU) != 0x0CU) {    /* Wait until output of the PLL is selected */
   }
+  #endif
 #elif (CLOCK_SETUP == 2)
   /* SIM->SCGC5: PORTA=1 */
   SIM->SCGC5 |= (uint32_t)0x0200UL;     /* Enable clock gate for ports to enable pin routing */
@@ -185,10 +195,12 @@ void SystemInit (void) {
   MCG->C5 = (uint8_t)0x00U;
   /* MCG->C6: LOLIE0=0,PLLS=0,CME0=0,VDIV0=0 */
   MCG->C6 = (uint8_t)0x00U;
+  #ifndef SIMULATOR
   while((MCG->S & MCG_S_IREFST_MASK) != 0x00U) { /* Check that the source of the FLL reference clock is the external reference clock. */
   }
   while((MCG->S & 0x0CU) != 0x08U) {    /* Wait until external reference clock is selected as MCG output */
   }
+  #endif
   /* Switch to BLPE Mode */
   /* MCG_C2: LOCRE0=0,RANGE0=2,HGO0=0,EREFS0=1,LP=1,IRCS=0 */
   MCG->C2 = (uint8_t)((MCG->C2 & (uint8_t)~(uint8_t)0x99U) | (uint8_t)0x26U);

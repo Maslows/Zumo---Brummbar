@@ -219,8 +219,8 @@
 void os_idle_demon (void) {
   /* The idle demon is a system thread, running when no other thread is      */
   /* ready to run.                                                           */
- 
   for (;;) {
+    
    __wfi();
     /* HERE: include optional user code to be executed when no thread runs.*/
   }

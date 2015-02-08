@@ -19,6 +19,11 @@
 #define UART_MODULE 0
 
 /**
+  @brief Define which DMA channel to use for data transmissin
+*/
+#define DMA_TX 1
+
+/**
 	@brief Defines speed of transmission.
 	@details	Default communication baud rate in HC-06 is 9600.
 						Others are available by changing settings in AT-mode of module.
@@ -41,7 +46,6 @@
 #else
   #define UART UART2
 #endif
-
 
 
 // Main user functions

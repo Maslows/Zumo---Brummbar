@@ -4,7 +4,7 @@
 
 #define osObjectsPublic                     // define objects in main module
 #include "osObjects.h"                      // RTOS object definitions
-#include "bluetooth.h"
+#include "bluetoothDMA.h"
 #include "sonar.h"
 #include "servo.h"
 #include "motors.h"
@@ -16,7 +16,7 @@
 */
 int main (void) {
   /* Initialize CMSIS-RTOS */
-  osKernelInitialize ();                    
+  osKernelInitialize();                    
   
   /* Initialize Mail queues */
   qid_MessageTX = osMailCreate(osMailQ(MessageTX),NULL);
@@ -34,5 +34,5 @@ int main (void) {
   Init_comms();
   
   /* Start thread execuion */
-	osKernelStart ();                          
+	osKernelStart();
 }
