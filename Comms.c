@@ -36,7 +36,6 @@ void SendMessage(const char * fmt , ...){
   Message = osMailAlloc(qid_MessageTX, 0);       // allocate memory for new message
    
   if (Message != 0){
-    
     __disable_irq();                                         // disable interrupts
     va_start(vl, fmt);                                       // start agument iteration
     vsnprintf( Message->msg, 100, fmt, vl);                  // add arguments to buffor based on format string
@@ -49,7 +48,6 @@ void SendMessage(const char * fmt , ...){
     if(!(DMA0->DMA[1].DSR_BCR & DMA_DSR_BCR_BSY_MASK)){
       NVIC_SetPendingIRQ(DMA1_IRQn);
     }
-    //osSignalSet(tid_comms, SIG_PROCMSG_MAIL_SENT);           // send signal to Comms
   }
  }
 }

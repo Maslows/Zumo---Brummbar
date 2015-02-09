@@ -116,6 +116,7 @@ void UART0_IRQHandler(void){
         i = 0;
         osMailPut(qid_MessageRX,Message);
         osSignalSet(tid_comms,SIG_UART_DATA_RECIEVED);
+        Message = 0;
       } else {
         i++;
       }
@@ -131,7 +132,7 @@ void DMA1_IRQHandler(void){
     
   DMAMUX0->CHCFG[1] &= ~DMAMUX_CHCFG_ENBL_MASK; // Disable DMA MUX
   DMA0->DMA[1].DSR_BCR |= DMA_DSR_BCR_DONE_MASK;    // Clear Done and other flags
-  
+
   /* Free previous message if any */
   if (Message != 0){
     osMailFree(qid_MessageTX,Message);       // free memory
