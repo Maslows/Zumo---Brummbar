@@ -8,6 +8,7 @@
 #include "sonar.h"
 #include "servo.h"
 #include "motors.h"
+#include "LedLine.h"
 
 
 
@@ -29,6 +30,7 @@ int main (void) {
   Sonar_init(CONTINUOUS);
   Servo_init(MANUAL, SCAN_AND_LOCK);
   motors_init();
+  LedLine_Init();
    
   /* Start coms thread */
   Init_comms();

@@ -65,6 +65,7 @@ void ParseAndExecute(void){
     if ( osEvt.status == osEventMail){
       Message = osEvt.value.p;
       NewCommand = parse_command(Message->msg);
+      osMailFree(qid_MessageRX,Message);
       ExecuteCommand(&NewCommand);
     } else {
       break;

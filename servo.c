@@ -245,15 +245,14 @@ void ServoMoveByDegree(int32_t degree){
  This function handles PIT interupts
  - Channel 2: Used to keep track of servo movement time.
 */
-void PIT_IRQHandler(void){
-	if (PIT->CHANNEL[1].TFLG & PIT_TFLG_TIF_MASK) {
+void ServoPITHandler(void){
+	
 		/* CH2 ISR */
 		/* Servo reached its destination. Stop countdown and enable trigger*/
 		ServoState = IDLE;																						/* Set servo state to idle */
 		PIT->CHANNEL[1].TCTRL &= ~PIT_TCTRL_TEN_MASK;      						/* Disable timer */
 		PIT->CHANNEL[1].TFLG  |= PIT_TFLG_TIF_MASK; 									/* Clear Interupt Flag */
 		
-		EnableSonar();																								/* Enable Sonar */
-	}
+		EnableSonar();																								/* Enable Sonar */	
 }
 

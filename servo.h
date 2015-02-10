@@ -87,6 +87,7 @@ void ServoSweepStep(uint16_t distance);
 void ServoChangeMode(ServoMode_t NewMode);
 void ServoChangeSweepMode(ServoSweep_t NewSweep);
 void ServoChangeLockRange(uint16_t NewRange);
+void ServoPITHandler(void);
 
 
 #endif
