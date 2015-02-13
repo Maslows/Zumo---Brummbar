@@ -5,21 +5,54 @@
   @brief ISR for Left_A encoder
 */
 void PORTA_IRQHandler(void){
-
-  if (EncFlags & LEFT){
-    LeftTrackTurnDist -= TEETH_DISTANCE_MM;
-    if ( LeftTrackTurnDist <= 0 ) {
-        EncFlags &= ~LEFT;
-        SetTrackSpeed(LEFT, 0);
-        if (EncFlags == 0){
-          osSignalSet(tid_zumoAI,SIG_MOVE_COMPLETE);
-        }
-    }      
+  /* Left A Encoder */
+  if (LEFT_A_ENCODER_PORT->PCR[LEFT_A_ENCODER_PIN] & PORT_PCR_ISF_MASK){
+    left_count++;
+    if (EncFlags & LEFT){
+      LeftTrackTurnDist--;
+      if ( LeftTrackTurnDist <= 0 ) {
+          EncFlags &= ~LEFT;
+          SetTrackSpeed(LEFT, 0);
+          if (EncFlags == 0){
+            osSignalSet(tid_zumoAI,SIG_MOVE_COMPLETE);
+          }
+      }      
+    }
+    LEFT_A_ENCODER_PORT->PCR[LEFT_A_ENCODER_PIN] |= PORT_PCR_ISF_MASK;
   }
   
-  /* Clear interupt flag */
-  LEFT_A_ENCODER_PORT->PCR[LEFT_A_ENCODER_PIN] |= PORT_PCR_ISF_MASK;
+  /* Left B Encoder */
+  if (LEFT_B_ENCODER_PORT->PCR[LEFT_B_ENCODER_PIN] & PORT_PCR_ISF_MASK){
+    left_count++;
+    if (EncFlags & LEFT){
+      LeftTrackTurnDist--;
+      if ( LeftTrackTurnDist <= 0 ) {
+          EncFlags &= ~LEFT;
+          SetTrackSpeed(LEFT, 0);
+          if (EncFlags == 0){
+            osSignalSet(tid_zumoAI,SIG_MOVE_COMPLETE);
+          }
+      }      
+    }
+    LEFT_B_ENCODER_PORT->PCR[LEFT_B_ENCODER_PIN] |= PORT_PCR_ISF_MASK;
+  }
   
+  /* Right B Encoder */
+  if (RIGHT_B_ENCODER_PORT->PCR[RIGHT_B_ENCODER_PIN] & PORT_PCR_ISF_MASK){
+    right_count++;
+    if (EncFlags & RIGHT){
+      RightTrackTurnDist--;
+      if ( RightTrackTurnDist <= 0 ) {
+          EncFlags &= ~RIGHT;
+          SetTrackSpeed(RIGHT, 0);
+          if (EncFlags == 0){
+            osSignalSet(tid_zumoAI,SIG_MOVE_COMPLETE);
+          }
+      }      
+    }
+    RIGHT_B_ENCODER_PORT->PCR[RIGHT_B_ENCODER_PIN] |= PORT_PCR_ISF_MASK;
+  }
+   
 }
 
 /**  
@@ -29,8 +62,9 @@ void PORTC_PORTD_IRQHandler(void){
 
   /* Check if encoder caused ISR */
   if (RIGHT_A_ENCODER_PORT->PCR[RIGHT_A_ENCODER_PIN] & PORT_PCR_ISF_MASK){
+    right_count++;
     if (EncFlags & RIGHT){
-      RightTrackTurnDist -= TEETH_DISTANCE_MM;
+      RightTrackTurnDist--;
       if ( RightTrackTurnDist <= 0 ) {
           EncFlags &= ~RIGHT;
           SetTrackSpeed(RIGHT, 0);

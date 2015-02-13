@@ -8,14 +8,14 @@
 /**
   @brief Define distance travelled per encoder event.
 */
-#define TEETH_DISTANCE_MM 5
+#define TEETH_DISTANCE_MM (2.5f)
 
 /**
   @brief Define the perimiter of a wheel.
 */
 #define M_PI 3.141592f
 #define WHEEL_PERIMITER_MM 119 //0.11938052083641214m 
-#define DISTANCE_BETWEEN_TRACKS_MM 95  //mm
+#define DISTANCE_BETWEEN_TRACKS_MM 98  //mm
 #define ZUMO_TURN_PERIMITER_MM (M_PI*DISTANCE_BETWEEN_TRACKS_MM)
 #define DEFAULT_TURNING_SPEED (40)
 
@@ -46,6 +46,16 @@
 #define RIGHT_A_ENCODER_MASK (1 << RIGHT_A_ENCODER_PIN)
 #define RIGHT_A_ENCODER_PORT PORTD
 #define RIGHT_A_ENCODER_FPORT (FPTD)
+
+#define LEFT_B_ENCODER_PIN (17)
+#define LEFT_B_ENCODER_MASK (1 << LEFT_A_ENCODER_PIN)
+#define LEFT_B_ENCODER_PORT PORTA
+#define LEFT_B_ENCODER_FPORT (FPTA)
+
+#define RIGHT_B_ENCODER_PIN (16)
+#define RIGHT_B_ENCODER_MASK (1 << RIGHT_A_ENCODER_PIN)
+#define RIGHT_B_ENCODER_PORT PORTA
+#define RIGHT_B_ENCODER_FPORT (FPTA)
 
 /**
   @brief Define direction.

@@ -137,7 +137,7 @@ void turnRight(void){
 void rotate(int angle){
   
   if (angle <= -3 || angle >= 3){
-    int32_t distance = (int32_t)((ZUMO_TURN_PERIMITER_MM * angle)/360.0);
+    int32_t distance = (int32_t)((ZUMO_TURN_PERIMITER_MM * angle)/360.0)/TEETH_DISTANCE_MM;
     
     __disable_irq();
     
@@ -221,6 +221,16 @@ void motors_init(void){
   
   RIGHT_A_ENCODER_FPORT->PDDR &= ~RIGHT_A_ENCODER_MASK;                 /* Set as output */
   RIGHT_A_ENCODER_PORT->PCR[RIGHT_A_ENCODER_PIN] |= PORT_PCR_MUX(1)    /* Set MUX to GPIO */
+                                                 |  PORT_PCR_IRQC(11)  /* Enable Interupt on either edge */ 
+                                                 |  PORT_PCR_ISF_MASK; /* Clear interupt flag */
+                                                 
+  LEFT_B_ENCODER_FPORT->PDDR &= ~LEFT_B_ENCODER_MASK;                  /* Set as output */
+  LEFT_B_ENCODER_PORT->PCR[LEFT_B_ENCODER_PIN] |= PORT_PCR_MUX(1)     /* Set MUX to GPIO */
+                                               |  PORT_PCR_IRQC(11)   /* Enable Interupt on either edge */
+                                               |  PORT_PCR_ISF_MASK;  /* Clear interupt flag */
+  
+  RIGHT_B_ENCODER_FPORT->PDDR &= ~RIGHT_B_ENCODER_MASK;                 /* Set as output */
+  RIGHT_B_ENCODER_PORT->PCR[RIGHT_B_ENCODER_PIN] |= PORT_PCR_MUX(1)    /* Set MUX to GPIO */
                                                  |  PORT_PCR_IRQC(11)  /* Enable Interupt on either edge */ 
                                                  |  PORT_PCR_ISF_MASK; /* Clear interupt flag */
                                                  
