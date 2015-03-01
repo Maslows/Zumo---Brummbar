@@ -1,0 +1,35 @@
+var os_objects_8h =
+[
+    [ "Message", "struct_message.html", "struct_message" ],
+    [ "osObjectsExternal", "os_objects_8h.html#a36728da1f4e033bec7d80fa3c871a085", null ],
+    [ "Message_t", "os_objects_8h.html#a67ead5c2ac35aabe72f3a3523e5c039e", null ],
+    [ "Signal_t", "os_objects_8h.html#abb6e6bef9506813ca2ebcbc20a28ca18", [
+      [ "SIG_SONAR_MAIL_SENT", "os_objects_8h.html#abb6e6bef9506813ca2ebcbc20a28ca18a2e0c8b920ec2e0293b10fb49c3e31ecc", null ],
+      [ "SIG_UART_DATA_RECIEVED", "os_objects_8h.html#abb6e6bef9506813ca2ebcbc20a28ca18a395ac5c21d2a2a092871e26fa8c8b49c", null ],
+      [ "SIG_MOVE_COMPLETE", "os_objects_8h.html#abb6e6bef9506813ca2ebcbc20a28ca18adb9e0db0de0461d1dfb5c615b1f2543f", null ],
+      [ "SIG_ENEMY_LOCK_ON", "os_objects_8h.html#abb6e6bef9506813ca2ebcbc20a28ca18afbcae3d5a173f9b66cd212deac85201b", null ],
+      [ "SIG_ENEMY_LOCK_LOST", "os_objects_8h.html#abb6e6bef9506813ca2ebcbc20a28ca18ae83c93283f8c395d8c75fddb1bbae0d5", null ],
+      [ "SIG_PROCMSG_MAIL_SENT", "os_objects_8h.html#abb6e6bef9506813ca2ebcbc20a28ca18a796e8a08e3039bb2ce6385ed7bf7ea49", null ],
+      [ "SIG_START_ZUMOAI", "os_objects_8h.html#abb6e6bef9506813ca2ebcbc20a28ca18ac45044e556cafe6e6832d361d87e331d", null ],
+      [ "SIG_KILL_ZUMOAI", "os_objects_8h.html#abb6e6bef9506813ca2ebcbc20a28ca18afff9ff79efe7ec8a0eb4827d43ae7aff", null ],
+      [ "SIG_START_DEBOUNCE_TIMER", "os_objects_8h.html#abb6e6bef9506813ca2ebcbc20a28ca18a221fa7b3d7064630f7901eedc3e3fe61", null ],
+      [ "SIG_SWEEP_COMPLETE", "os_objects_8h.html#abb6e6bef9506813ca2ebcbc20a28ca18a0d8dc25db93538e3a2f536b3094c9729", null ]
+    ] ],
+    [ "comms", "os_objects_8h.html#ae1a9429196473f083cf4f722f4e74885", null ],
+    [ "Debounce_Callback", "os_objects_8h.html#a4f4155e462cff14165405cb816a820bc", null ],
+    [ "Init_comms", "os_objects_8h.html#a1b2c4c5bfcc2169d25abf04b000efe9d", null ],
+    [ "Init_ZumoAI", "os_objects_8h.html#a86155b0b932d9e24b651d4a1b5410808", null ],
+    [ "Kill_ZumoAI", "os_objects_8h.html#a5bd273e53c04d29694effc7de5b527aa", null ],
+    [ "osMailQDef", "os_objects_8h.html#abbc757f2e572f2256774c6f700ce061e", null ],
+    [ "osMailQDef", "os_objects_8h.html#a6abb15cff8fa2eb475250062f963fac8", null ],
+    [ "osThreadDef", "os_objects_8h.html#a6ef2bd8717ac90c48925438d74c0c435", null ],
+    [ "osThreadDef", "os_objects_8h.html#ae1cddbd75b36a0584271e2f17716b9b5", null ],
+    [ "osTimerDef", "os_objects_8h.html#a11fba86514a507f7be6d8cc4635dea67", null ],
+    [ "SendMessage", "os_objects_8h.html#a7970568a123fc2879fc1383b4cbe5713", null ],
+    [ "zumoAI", "os_objects_8h.html#ada2d2e51053dbcc4f31d8b092dfc241b", null ],
+    [ "qid_MessageRX", "os_objects_8h.html#a4ed2488ad411096fdd676e7f7aa29a62", null ],
+    [ "qid_MessageTX", "os_objects_8h.html#a0eee7d463f48466b2e537aa25031e18b", null ],
+    [ "tid_comms", "os_objects_8h.html#a07dcd494595094d9ae54bc652f339f25", null ],
+    [ "tid_DebounceTimer", "os_objects_8h.html#a43ebc2a401259484941fb200fdbaedc8", null ],
+    [ "tid_zumoAI", "os_objects_8h.html#a3ffd9239a65221dc504594b4b85af920", null ]
+];
