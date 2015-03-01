@@ -102,6 +102,7 @@ Phase_t Ram(void){
   while(1){
     osDelay(20);
     drive(40,FORWARD,lastDistance);
+		//drive(100,FORWARD,0); // uncomment this line to ram instead of stoping in front of the enemy. Comment out the line above.
     SendMessage("ZumoAI: Rammming!\n");
     osSignalClear(tid_zumoAI,SIG_ENEMY_LOCK_LOST);
     Evt = osSignalWait(SIG_ENEMY_LOCK_LOST,2000);
