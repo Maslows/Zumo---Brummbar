@@ -119,7 +119,7 @@ void zumoAI(void const *argument){
   Phase_t ZumoNextPhase = FIND_ENEMY;
   ServoChangeSweepMode(SCAN_AND_LOCK);
   ServoChangeMode(SWEEP);
-
+	//osDelay(5000);
   /* Main Loop */
   while(1){
     switch(ZumoNextPhase){
